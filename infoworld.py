@@ -18,8 +18,13 @@ SITE_ADDRESS = 'http://www.infoworld.com'
 ARTICLES_PER_PAGE = 200
 
 
+def extract_tag(tag):
+    if tag is not None:
+        tag.extract()
+
+
 def get_articles(article_count, save_folder):
-    start = 0
+    start = 20
     processed_articles = 0
     while article_count > processed_articles:
         r = requests.get(SITE_ADDRESS + '/news?start=' + str(start))
@@ -34,13 +39,27 @@ def get_articles(article_count, save_folder):
             header = article_soup.find('h3').get_text()
             summary = article_soup.find('h4').get_text()
 
-            soup = BeautifulSoup(requests.get(SITE_ADDRESS + link, stream=False).content, 'html.parser')
+            soup = BeautifulSoup(requests.get(SITE_ADDRESS + link).content, 'html.parser')
             if soup.find('div', itemprop='articleBody') is None or soup.find('ul', itemprop='keywords') is None:
                 continue
 
-            text = soup.find('div', itemprop='articleBody').get_text()
             tags = soup.find('ul', itemprop='keywords').get_text()
             author_name = soup.find('span', itemprop='name').get_text()
+
+            text = ''
+
+            while True:
+                extract_tag(soup.find('aside'))  # probably we don't need comments for an images
+                extract_tag(soup.find('figure', {'class': 'fakesidebar'}))  # get rid of text ads
+
+                text += soup.find('div', itemprop='articleBody').get_text()
+                next_page_link = soup.find('a', {'class': 'page-link next'})
+
+                if next_page_link is None:
+                    break
+
+                soup = BeautifulSoup(requests.get(SITE_ADDRESS + next_page_link.get('href')).content, 'html.parser')
+
             with open(os.path.join(save_folder, link.split('/')[-1] + '.pkl'), 'wb') as f:
                 pickle.dump(Article(header, summary, text, tags, link, author_name), f)
 
