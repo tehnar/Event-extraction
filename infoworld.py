@@ -23,8 +23,7 @@ def extract_tag(tag):
         tag.extract()
 
 
-def get_articles(article_count, save_folder):
-    start = 20
+def get_articles(article_count, save_folder, start=0):
     processed_articles = 0
     while article_count > processed_articles:
         r = requests.get(SITE_ADDRESS + '/news?start=' + str(start))
@@ -69,7 +68,8 @@ def get_articles(article_count, save_folder):
         start += ARTICLES_PER_PAGE
 
 if __name__ == '__main__':
-    if len(sys.argv) != 3:
-        print('Usage: python3 infoworld.py [number of articles] [destination folder]')
+    if len(sys.argv) not in [3, 4]:
+        print('Usage: python3 infoworld.py {number of articles} {destination folder} [number of articles to skip]')
     else:
-        get_articles(int(sys.argv[1]), sys.argv[2])
+        start = int(sys.argv[3]) if len(sys.argv) == 4 else 0
+        get_articles(int(sys.argv[1]), sys.argv[2], start)
