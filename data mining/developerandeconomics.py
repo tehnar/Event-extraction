@@ -25,7 +25,7 @@ HEADERS = {
 
 
 def get_articles(article_count, save_folder, start=0):
-    page = start / ARTICLES_PER_PAGE + 1
+    page = start // ARTICLES_PER_PAGE + 1
     processed_articles = 0
     while article_count > processed_articles:
         r = requests.get(SITE_ADDRESS + '/news/page/' + str(page), headers=HEADERS)
