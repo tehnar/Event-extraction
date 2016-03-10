@@ -31,5 +31,5 @@ CREATE TABLE IF NOT EXISTS events (
 
 CREATE TABLE IF NOT EXISTS event_sources (
     source_id INTEGER REFERENCES articles (id),
-    action_id INTEGER REFERENCES actions (id)
+    event_id INTEGER REFERENCES events (id)
 );
