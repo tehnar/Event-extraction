@@ -3,16 +3,8 @@ from bs4 import BeautifulSoup
 import pickle
 import os
 import sys
+from .article import Article
 
-
-class Article:
-    def __init__(self, header, summary, text, tags, link, author_name):
-        self.header = header
-        self.summary = summary
-        self.text = text
-        self.tags = tags
-        self.link = link
-        self.author_name = author_name
 
 SITE_ADDRESS = 'http://www.infoworld.com'
 ARTICLES_PER_PAGE = 200
