@@ -10,9 +10,11 @@ from .article import Article
 SITE_ADDRESS = 'http://www.itnews.com/'
 ARTICLES_PER_PAGE = 200
 
+
 def extract_tag(tag):
     if tag is not None:
         tag.extract()
+
 
 def get_articles(article_count, save_folder, start=0):
     processed_articles = 0
@@ -40,7 +42,7 @@ def get_articles(article_count, save_folder, start=0):
         text = ''
         paragraphs = soup.find('div', itemprop='articleBody').find_all('p')
         for paragraph in paragraphs:
-            text += paragraph.get_text()
+            text += ' '.join(paragraph.strings)
         
         with open(os.path.join(save_folder, link.split('/')[-1] + '.pkl'), 'wb') as f:
             pickle.dump(Article(header, summary, text, tags, link, author_name), f)

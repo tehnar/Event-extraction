@@ -31,7 +31,7 @@ def get_articles(article_count, save_folder, start=0):
             header = article_soup.find('span', {'class': 'story-title'}).find('a').get_text()
             summary = None
             tags = None
-            text = article_soup.find('div', {'class': 'p'}).get_text()
+            text = ' '.join(article_soup.find('div', {'class': 'p'}).strings)
             author_name = article_soup.find('span', {'class': 'story-byline'}).get_text().replace('Posted', '').replace('by', '').split()[0]
 
             with open(os.path.join(save_folder, link.split('/')[-1] + '.pkl'), 'wb') as f:

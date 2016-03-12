@@ -43,7 +43,7 @@ def get_articles(article_count, save_folder, start=0):
                 extract_tag(soup.find('aside'))  # probably we don't need comments for an images
                 extract_tag(soup.find('figure', {'class': 'fakesidebar'}))  # get rid of text ads
 
-                text += soup.find('div', itemprop='articleBody').get_text()
+                text += ' '.join(soup.find('div', itemprop='articleBody').strings)
                 next_page_link = soup.find('a', {'class': 'page-link next'})
 
                 if next_page_link is None:
