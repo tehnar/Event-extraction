@@ -29,7 +29,7 @@ def get_articles(article_count, save_folder, start=0):
                 break
             link = article_soup.find('span', {'class': 'story-title'}).find('a').get('href')
             header = article_soup.find('span', {'class': 'story-title'}).find('a').get_text()
-            summary = None
+            summary = ''
             tags = None
             text = ' '.join(article_soup.find('div', {'class': 'p'}).strings)
             author_name = article_soup.find('span', {'class': 'story-byline'}).get_text().replace('Posted', '').replace('by', '').split()[0]

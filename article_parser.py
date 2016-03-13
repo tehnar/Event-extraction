@@ -32,17 +32,22 @@ os.makedirs(TMP_DIR)
 
 
 for downloader in [developerandeconomics, infoworld, slashdot]:
-    downloader.get_articles(300, TMP_DIR)
+    try:
+        downloader.get_articles(300, TMP_DIR)
+    except:
+        pass
 
 out = open('test.out', 'w')
 sentences = []
 for filename in os.listdir(TMP_DIR):
     with open(os.path.join(TMP_DIR, filename), 'rb') as fin:
         sentences += list(filter(has_keywords,
+                                 map(lambda s: s.strip(), split_into_sentences(pickle.load(fin).summary))))
+        fin.seek(0)
+        sentences += list(filter(has_keywords,
                                  map(lambda s: s.strip(), split_into_sentences(pickle.load(fin).text))))
-
 shutil.rmtree(TMP_DIR)
 
 for s in sentences:
-    print(s, out)
+    print(s, file=out)
     #parser.parse(s).draw()
