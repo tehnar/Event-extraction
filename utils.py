@@ -44,27 +44,27 @@ def get_childs(node):
     return list(filter(lambda x : isinstance(x, Tree), node))
 
 
-def find_first_node(node, p, after = None):
+def find_first_node(node, predicate, after = None):
     if not isinstance(node, Tree):
         return None
 
-    if p(node._label) == True:
+    if predicate(node._label):
         return node
 
     found = after is None
     childs = []
     for child in get_childs(node):
-        if found == True:
+        if found:
             childs.append(child)
-        if child == after:
+        if child is after:
+            #  we need to compare by reference in case of equals leaves (for example, a lot of colons in subtree)
             found = True
 
-    results = map(lambda x : find_first_node(x, p), childs)
+    results = map(lambda x : find_first_node(x, predicate), childs)
     result = next((item for item in results if item is not None), None)
-
     if result is None:
         if node.parent is not None:
-            return find_first_node(node.parent, p, node)
+            return find_first_node(node.parent, predicate, node)
 
     return result
 
