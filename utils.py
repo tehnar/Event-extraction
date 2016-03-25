@@ -4,11 +4,48 @@ from functools import reduce
 import nltk
 
 
+def patched_parser(key_nouns):
+    parser = Parser()
+
+    def unprob_rule(rule_left):
+        #global rule, prob
+        for rule, prob in parser.pcfg.q1.items():
+            if rule[0] == rule_left:
+                parser.pcfg.q1[rule] = prob / 2
+        for rule, prob in parser.pcfg.q2.items():
+            if rule[0] == rule_left:
+                parser.pcfg.q2[rule] = prob / 2
+
+    def add_nns(rule_left, nn_list):
+        prob = 0.5 / len(nn_list)
+        for nn in nn_list:
+            parser.pcfg.well_known_words.append(nn)
+            parser.pcfg.q1[(rule_left, nn)] = prob
+
+    unprob_rule('NN')
+    #unprob_rule('VB')
+
+    key_nouns.append('platform')
+    add_nns('NN', key_nouns)
+    #add_nns('VB', ['rolls'])
+
+    parse = parser.parse
+
+    def new_parse(text):
+        tree = parse(text)
+        modify_tree(tree)
+        return tree
+
+    parser.parse = new_parse
+
+    return parser
+
+
 def split_into_sentences(text):
     return split_into_sentences.tokenizer.tokenize(text)
 
 
-def modify_tree(node, parent):
+def modify_tree(node, parent=None):
     node.parent = parent
 
     #map(lambda x : modify_tree(x, node), get_childs(node))
@@ -32,6 +69,14 @@ def get_words(node):
     return reduce(lambda x, y: x + get_words(y), node, [])
 
 
+def is_upper(upper_node, lower_node):
+    while lower_node is not None:
+        if lower_node == upper_node:
+            return True
+        lower_node = lower_node.parent
+    return False
+
+
 def find_node_by_word(node, word):
     if len(list(filter(lambda x : x == word, node))) > 0:
         return node
@@ -44,11 +89,11 @@ def get_childs(node):
     return list(filter(lambda x : isinstance(x, Tree), node))
 
 
-def find_first_node(node, predicate, after = None):
+def find_first_node(node, predicate, after=None):
     if not isinstance(node, Tree):
         return None
 
-    if predicate(node._label):
+    if predicate(node):
         return node
 
     found = after is None
