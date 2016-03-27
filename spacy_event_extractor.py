@@ -1,22 +1,23 @@
 import os
 import pickle
+
 from spacy.en import English
-from spacy.tokens import Span
- 
- 
+
+
 class SpacyEventExtractor:
     _nlp = English(entity=False)
-    _keywords = list(map(lambda s : s.strip().lower(), open('keywords.txt', 'r').readlines()))
- 
- 
+    _keywords = list(map(lambda s: s.strip().lower(), open('keywords.txt', 'r').readlines()))
+
+    def __init__(self):
+        pass
+
     @staticmethod
     def _get_chunk(token, doc):
         for chunk in doc.noun_chunks:
             if token in chunk:
                 return chunk
         return token
- 
- 
+
     @staticmethod
     def get_prep_with_word(childs, doc):
         prep = None
@@ -24,17 +25,16 @@ class SpacyEventExtractor:
             if child.dep_ == "prep":
                 prep = child
                 break
-        if prep == None:
-            return ("", None)
- 
+        if prep is None:
+            return "", None
+
         for word in prep.children:
             if word.dep_ == "pobj":
                 chunk = SpacyEventExtractor._get_chunk(word, doc)
-                return (str(prep) + str(chunk), chunk)
- 
-        return ("", None)
- 
- 
+                return str(prep) + str(chunk), chunk
+
+        return "", None
+
     @staticmethod
     def extract(text):
         events = []
@@ -64,24 +64,28 @@ class SpacyEventExtractor:
                     break
             if subj is None:
                 continue
- 
+
             token = SpacyEventExtractor._get_chunk(token, doc)
             subj = SpacyEventExtractor._get_chunk(subj, doc)
- 
+
             subj_string = str(subj) + " "
             subj = SpacyEventExtractor.get_prep_with_word(subj.rights, doc)
             while subj[1] is not None:
                 subj_string += subj[0]
                 subj = SpacyEventExtractor.get_prep_with_word(subj[1].rights, doc)
-            if len(set([word.strip().lower() for word in str(token).split()]) & set(SpacyEventExtractor._keywords))  + len(set(word.strip().lower() for word in subj_string.split()) & set(SpacyEventExtractor._keywords)) == 0:
-                    continue
+
+            keywords_set = set(SpacyEventExtractor._keywords)
+            if len(set([word.strip().lower() for word in str(token).split()]) & keywords_set) + \
+                    len(set(word.strip().lower() for word in subj_string.split()) & keywords_set) == 0:
+                continue  # there is no keywords in token and subj_string
             events += (str(token), str(verb), str(subj_string))
-            #print(sentence)
-            #print('Object: ', token)
-            #print('Action: ', verb)
-            #print('Subject: ', subj_string)
+            # print(sentence)
+            # print('Object: ', token)
+            # print('Action: ', verb)
+            # print('Subject: ', subj_string)
 
         return events
+
 
 def main():
     TMP_DIR = './tmp'
@@ -91,6 +95,7 @@ def main():
             events = SpacyEventExtractor.extract(pickle.load(fin).summary)
             fin.seek(0)
             events += SpacyEventExtractor.extract(pickle.load(fin).text)
+
 
 if __name__ == '__main__':
     main()
