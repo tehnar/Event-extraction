@@ -1,5 +1,6 @@
 import os
 import pickle
+from db_handler import DatabaseHandler
 
 from spacy.en import English
 
@@ -78,24 +79,42 @@ class SpacyEventExtractor:
             if len(set([word.strip().lower() for word in str(token).split()]) & keywords_set) + \
                     len(set(word.strip().lower() for word in subj_string.split()) & keywords_set) == 0:
                 continue  # there is no keywords in token and subj_string
-            events += (str(token), str(verb), str(subj_string))
-            # print(sentence)
-            # print('Object: ', token)
-            # print('Action: ', verb)
-            # print('Subject: ', subj_string)
+            events.append((str(token), str(verb), str(subj_string)))
+            print(sentence)
+            print('Object: ', token)
+            print('Action: ', verb)
+            print('Subject: ', subj_string)
 
         return events
 
 
 def main():
-    TMP_DIR = './tmp'
+    import data_mining.infoworld as infoworld
+    import data_mining.developerandeconomics as developerandeconomics
+    import data_mining.slashdot as slashdot
+    import os
 
-    for filename in os.listdir(TMP_DIR):
-        with open(os.path.join(TMP_DIR, filename), 'rb') as fin:
-            events = SpacyEventExtractor.extract(pickle.load(fin).summary)
-            fin.seek(0)
-            events += SpacyEventExtractor.extract(pickle.load(fin).text)
+    tmp_dir = './tmp'
 
+    if not os.path.exists(tmp_dir):
+        os.makedirs(tmp_dir)
+
+        for downloader in [developerandeconomics, infoworld, slashdot]:
+            for i in range(3):
+                try:
+                    downloader.get_articles(100, tmp_dir, 100 * i)
+                except:
+                    pass
+                print('')
+
+    db_handler = DatabaseHandler()
+    for filename in os.listdir(tmp_dir):
+        with open(os.path.join(tmp_dir, filename), 'rb') as fin:
+            article = pickle.load(fin)
+            events = SpacyEventExtractor.extract(article.summary)
+            events += SpacyEventExtractor.extract(article.text)
+            for event in events:
+                print(db_handler.add_event_or_get_id(event, article))
 
 if __name__ == '__main__':
     main()
