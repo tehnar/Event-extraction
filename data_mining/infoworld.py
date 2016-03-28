@@ -4,7 +4,7 @@ import pickle
 import os
 import sys
 from .article import Article
-
+from urllib.parse import urljoin
 
 SITE_ADDRESS = 'http://www.infoworld.com'
 ARTICLES_PER_PAGE = 200
@@ -34,7 +34,6 @@ def get_articles(article_count, save_folder, start=0):
             if soup.find('div', itemprop='articleBody') is None or soup.find('ul', itemprop='keywords') is None:
                 continue
 
-            tags = soup.find('ul', itemprop='keywords').get_text()
             author_name = soup.find('span', itemprop='name').get_text()
 
             text = ''
@@ -52,7 +51,8 @@ def get_articles(article_count, save_folder, start=0):
                 soup = BeautifulSoup(requests.get(SITE_ADDRESS + next_page_link.get('href')).content, 'html.parser')
 
             with open(os.path.join(save_folder, link.split('/')[-1] + '.pkl'), 'wb') as f:
-                pickle.dump(Article(header, summary, text, tags, link, author_name), f)
+                pickle.dump(Article(header=header, summary=summary, text=text,
+                                    url=urljoin(SITE_ADDRESS, link), author_name=author_name), f)
 
             processed_articles += 1
 

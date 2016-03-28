@@ -3,7 +3,7 @@ from bs4 import BeautifulSoup
 import pickle
 import os
 import sys
-import time
+from urllib.parse import urljoin
 from .article import Article
 
 
@@ -30,13 +30,11 @@ def get_articles(article_count, save_folder, start=0):
         link = SITE_ADDRESS + article_soup.find('h3').find('a').get('href')
         header = article_soup.find('h3').get_text()
         summary = article_soup.find('h4').get_text()
-        tags = None
-        
+
         soup = BeautifulSoup(requests.get(link).content, 'html.parser')
         if soup.find('div', itemprop='articleBody') is None:
             continue
 
-        tags = soup.find('div', {'class': 'apart-alt tags'}).find('ul', itemprop='keywords').get_text()
         author_name = soup.find('span', itemprop='name').get_text()
         
         text = ''
@@ -45,7 +43,8 @@ def get_articles(article_count, save_folder, start=0):
             text += ' '.join(paragraph.strings)
         
         with open(os.path.join(save_folder, link.split('/')[-1] + '.pkl'), 'wb') as f:
-            pickle.dump(Article(header, summary, text, tags, link, author_name), f)
+            pickle.dump(Article(header=header, summary=summary, text=text, url=urljoin(SITE_ADDRESS, link),
+                                author_name=author_name), f)
 
         processed_articles += 1
 

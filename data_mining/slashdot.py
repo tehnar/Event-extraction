@@ -4,7 +4,7 @@ import pickle
 import os
 import sys
 import math
-import time
+from urllib.parse import urljoin
 from .article import Article
 
 
@@ -30,12 +30,12 @@ def get_articles(article_count, save_folder, start=0):
             link = article_soup.find('span', {'class': 'story-title'}).find('a').get('href')
             header = article_soup.find('span', {'class': 'story-title'}).find('a').get_text()
             summary = ''
-            tags = None
             text = ' '.join(article_soup.find('div', {'class': 'p'}).strings)
             author_name = article_soup.find('span', {'class': 'story-byline'}).get_text().replace('Posted', '').replace('by', '').split()[0]
 
             with open(os.path.join(save_folder, link.split('/')[-1] + '.pkl'), 'wb') as f:
-                pickle.dump(Article(header, summary, text, tags, link, author_name), f)
+                pickle.dump(Article(header=header, summary=summary, text=text, url=urljoin(SITE_ADDRESS, link),
+                                    author_name=author_name), f)
 
             processed_articles += 1
 
