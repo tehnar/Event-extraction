@@ -26,7 +26,8 @@ CREATE TABLE IF NOT EXISTS events (
     id SERIAL PRIMARY KEY,
     entity1 INTEGER REFERENCES entities (id), 
     entity2 INTEGER REFERENCES entities (id),
-    action INTEGER REFERENCES actions (id)
+    action INTEGER REFERENCES actions (id),
+    sentence TEXT
 );
 
 CREATE TABLE IF NOT EXISTS event_sources (

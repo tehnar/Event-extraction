@@ -79,7 +79,7 @@ class SpacyEventExtractor:
             if len(set([word.strip().lower() for word in str(token).split()]) & keywords_set) + \
                     len(set(word.strip().lower() for word in subj_string.split()) & keywords_set) == 0:
                 continue  # there is no keywords in token and subj_string
-            events.append((str(token), str(verb), str(subj_string)))
+            events.append((str(token), str(verb), str(subj_string)), str(sentence))
             print(sentence)
             print('Object: ', token)
             print('Action: ', verb)
