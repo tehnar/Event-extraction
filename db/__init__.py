@@ -1,1 +1,1 @@
-from db import db_handler
+from db.db_handler import DatabaseHandler
