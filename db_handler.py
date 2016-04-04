@@ -3,10 +3,10 @@ import psycopg2
 
 
 class DatabaseHandler:
-
+    _CONFIG_NAME = 'config.cfg'
     def __init__(self):
         config = configparser.ConfigParser()
-        config.read('config.cfg')
+        config.read(DatabaseHandler._CONFIG_NAME)
         login = config['db']['login']
         password = config['db']['password']
         host = config['db']['host']
