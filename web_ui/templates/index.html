@@ -1,0 +1,34 @@
+<html>
+    <head>
+        <link rel="stylesheet" type="text/css" href={{ url_for('static', filename='style.css') }}>
+        <title>
+            Test table
+        </title>
+    </head>
+
+    <body>
+        <form action="" method="post" name="get_articles">
+            <p> Number of articles in page: {{form.article_count(size=30)}} </p>
+            <p> Start date of articles: {{form.start_date(size=30)}} </p>
+            <p> {{form.hidden_tag()}} </p>
+            <input type="submit" value="Get articles!">
+        </form>
+        <table id="events">
+            <tr>
+                <th> Entity1 </th>
+                <th> Action </th>
+                <th> Entity2 </th>
+                <th> Sentence </th>
+            </tr>
+            {% for event in events%}
+            <tr> 
+                <td> {{event[0]}} </td>
+                <td> {{event[2]}} </td>
+                <td> {{event[1]}} </td>
+                <td> {{event[3]}} </td>
+            </tr>
+            {% endfor %}
+        </table>
+    </body>
+</html>
+    

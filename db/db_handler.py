@@ -66,3 +66,14 @@ class DatabaseHandler:
         else:
             event_id = event_id[0]
         return event_id
+
+    def get_events_starting_from(self, count, start_date):
+        self.cursor.execute("""SELECT entity1.entity_name, entity2.entity_name, action.action_name, event.sentence FROM
+        events event INNER JOIN event_sources source on source.event_id = event.id
+        INNER JOIN articles article ON article.id = source.source_id
+        INNER JOIN entities entity1 ON entity1.id = event.entity1
+        INNER JOIN entities entity2 ON entity2.id = event.entity2
+        INNER JOIN actions action ON action.id = event.action
+        WHERE article.publish_date IS NOT NULL AND article.publish_date <= %s
+        ORDER BY article.publish_date DESC LIMIT %s""", (start_date, count))
+        return self.cursor.fetchall()  # TODO: need to deal with NULL publish_date
