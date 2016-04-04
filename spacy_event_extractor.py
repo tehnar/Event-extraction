@@ -1,6 +1,6 @@
 import os
 import pickle
-from db_handler import DatabaseHandler
+from db.db_handler import DatabaseHandler
 
 from spacy.en import English
 
