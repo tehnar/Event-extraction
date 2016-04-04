@@ -4,6 +4,7 @@ import psycopg2
 
 class DatabaseHandler:
     _CONFIG_NAME = 'config.cfg'
+
     def __init__(self):
         config = configparser.ConfigParser()
         config.read(DatabaseHandler._CONFIG_NAME)
