@@ -5,6 +5,7 @@ import os
 import sys
 from .article import Article
 from urllib.parse import urljoin
+from dateutil import parser as date_parser
 
 SITE_ADDRESS = 'http://www.infoworld.com'
 ARTICLES_PER_PAGE = 200
@@ -29,13 +30,12 @@ def get_articles(article_count, save_folder, start=0):
             link = article_soup.find('h3').find('a').get('href')
             header = article_soup.find('h3').get_text()
             summary = article_soup.find('h4').get_text()
-
             soup = BeautifulSoup(requests.get(SITE_ADDRESS + link).content, 'html.parser')
             if soup.find('div', itemprop='articleBody') is None or soup.find('ul', itemprop='keywords') is None:
                 continue
 
             author_name = soup.find('span', itemprop='name').get_text()
-
+            date = soup.find('span', itemprop='datePublished').get('content')
             text = ''
 
             while True:
@@ -51,7 +51,7 @@ def get_articles(article_count, save_folder, start=0):
                 soup = BeautifulSoup(requests.get(SITE_ADDRESS + next_page_link.get('href')).content, 'html.parser')
 
             with open(os.path.join(save_folder, link.split('/')[-1] + '.pkl'), 'wb') as f:
-                pickle.dump(Article(header=header, summary=summary, text=text,
+                pickle.dump(Article(header=header, summary=summary, text=text, publish_date=date_parser.parse(date),
                                     url=urljoin(SITE_ADDRESS, link), author_name=author_name), f)
 
             processed_articles += 1

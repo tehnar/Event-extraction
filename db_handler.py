@@ -51,12 +51,13 @@ class DatabaseHandler:
         entity1_id = self.add_entity_or_get_id(event[0])
         action_id = self.add_action_or_get_id(event[1])
         entity2_id = self.add_entity_or_get_id(event[2])
-        self.cursor.execute("SELECT id FROM events WHERE entity1=(%s) and entity2=(%s) and action=(%s)",
-                                       (entity1_id, entity2_id, action_id))
+        sentence = event[3]
+        self.cursor.execute("SELECT id FROM events WHERE entity1=(%s) and entity2=(%s) and action=(%s) and sentence=(%s)",
+                                       (entity1_id, entity2_id, action_id, sentence))
         event_id = self.cursor.fetchone()
         if event_id is None:
-            self.cursor.execute("INSERT INTO events (entity1, entity2, action) VALUES (%s, %s, %s) RETURNING id",
-                                (entity1_id, entity2_id, action_id))
+            self.cursor.execute("INSERT INTO events (entity1, entity2, action, sentence) VALUES (%s, %s, %s, %s) RETURNING id",
+                                (entity1_id, entity2_id, action_id, sentence))
             self.connection.commit()
             event_id = self.cursor.fetchone()[0]
             self.cursor.execute("INSERT INTO event_sources (source_id, event_id) VALUES (%s, %s)",

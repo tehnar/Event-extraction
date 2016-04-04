@@ -5,6 +5,7 @@ import os
 import sys
 from urllib.parse import urljoin
 from .article import Article
+from dateutil import parser as date_parser
 
 
 SITE_ADDRESS = 'http://www.itnews.com/'
@@ -36,7 +37,7 @@ def get_articles(article_count, save_folder, start=0):
             continue
 
         author_name = soup.find('span', itemprop='name').get_text()
-        
+        date = soup.find('span', itemprop='datePublished').get('content')
         text = ''
         paragraphs = soup.find('div', itemprop='articleBody').find_all('p')
         for paragraph in paragraphs:
@@ -44,7 +45,7 @@ def get_articles(article_count, save_folder, start=0):
         
         with open(os.path.join(save_folder, link.split('/')[-1] + '.pkl'), 'wb') as f:
             pickle.dump(Article(header=header, summary=summary, text=text, url=urljoin(SITE_ADDRESS, link),
-                                author_name=author_name), f)
+                                author_name=author_name, publish_date=date_parser.parse(date)), f)
 
         processed_articles += 1
 

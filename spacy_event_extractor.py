@@ -79,7 +79,7 @@ class SpacyEventExtractor:
             if len(set([word.strip().lower() for word in str(token).split()]) & keywords_set) + \
                     len(set(word.strip().lower() for word in subj_string.split()) & keywords_set) == 0:
                 continue  # there is no keywords in token and subj_string
-            events.append((str(token), str(verb), str(subj_string)), str(sentence))
+            events.append((str(token), str(verb), str(subj_string), str(sentence)))
             print(sentence)
             print('Object: ', token)
             print('Action: ', verb)
@@ -104,9 +104,9 @@ def main():
                 try:
                     downloader.get_articles(100, tmp_dir, 100 * i)
                 except:
-                    pass
+                    import traceback
+                    print(traceback.format_exc())
                 print('')
-
     db_handler = DatabaseHandler()
     for filename in os.listdir(tmp_dir):
         with open(os.path.join(tmp_dir, filename), 'rb') as fin:

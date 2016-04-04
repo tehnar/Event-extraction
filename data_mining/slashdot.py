@@ -6,6 +6,7 @@ import sys
 import math
 from urllib.parse import urljoin
 from .article import Article
+from dateutil import parser as date_parser
 
 
 SITE_ADDRESS = 'http://slashdot.org/'
@@ -30,12 +31,14 @@ def get_articles(article_count, save_folder, start=0):
             link = article_soup.find('span', {'class': 'story-title'}).find('a').get('href')
             header = article_soup.find('span', {'class': 'story-title'}).find('a').get_text()
             summary = ''
+            date = article_soup.find('time').get('datetime')[3:-9]
+
             text = ' '.join(article_soup.find('div', {'class': 'p'}).strings)
             author_name = article_soup.find('span', {'class': 'story-byline'}).get_text().replace('Posted', '').replace('by', '').split()[0]
 
             with open(os.path.join(save_folder, link.split('/')[-1] + '.pkl'), 'wb') as f:
                 pickle.dump(Article(header=header, summary=summary, text=text, url=urljoin(SITE_ADDRESS, link),
-                                    author_name=author_name), f)
+                                    author_name=author_name, publish_date=date_parser.parse(date)), f)
 
             processed_articles += 1
 

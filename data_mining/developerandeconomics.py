@@ -5,6 +5,7 @@ from .article import Article
 import requests
 from bs4 import BeautifulSoup
 from urllib.parse import urljoin
+from dateutil import parser as date_parser
 
 SITE_ADDRESS = 'http://www.developereconomics.com'
 ARTICLES_PER_PAGE = 200
@@ -26,13 +27,14 @@ def get_articles(article_count, save_folder, start=0):
             if processed_articles == article_count:
                 break
             processed_articles += 1
-
             link = article_soup.get('href')
             soup = BeautifulSoup(requests.get(link, headers=HEADERS).content, 'html.parser')
+            date = soup.find('time').get_text()
             summary = soup.find('div', {'itemtype': 'http://schema.org/Article'}).get_text()
             header = soup.find('h1', {'class': 'heading'}).get_text()
             with open(os.path.join(save_folder, link.split('/')[-2] + '.pkl'), 'wb') as f:
-                pickle.dump(Article(header=header, summary=summary, url=urljoin(SITE_ADDRESS, link)), f)
+                pickle.dump(Article(header=header, summary=summary, url=urljoin(SITE_ADDRESS, link),
+                                    publish_date=date_parser.parse(date)), f)
 
             print('\rArticles got: %d/%d' % (processed_articles, article_count), end='', file=sys.stderr)
 
