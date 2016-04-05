@@ -4,6 +4,7 @@
 * psycopg2
 * flask-wtf
 * flask_nav
+* python-dateutil
 
 # Создание базы данных
 psql postgres -f create.sql 
