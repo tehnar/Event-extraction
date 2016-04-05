@@ -1,0 +1,169 @@
+RubyMine
+WebStorm
+dotTrace
+dotCover
+ReSharper C++
+PhpStorm
+Upsource
+Babel
+.NET
+Aurelia
+bower
+Gulp
+Webpack
+angularjs
+IntelliJ IDEA
+Chakra
+actionscript
+ajax
+android
+apache
+asp.net
+asp.net mvc
+azure
+backbone.js
+c
+c#
+c++
+cakephp
+cocoa
+codeigniter
+cordova
+css
+delphi
+django
+eclipse
+extjs
+firefox
+flash
+flex
+gcc
+git
+google app engine
+google chrome
+google maps
+grails
+gwt
+haskell
+hibernate
+html
+http
+iis
+internet explorer
+ios
+ipad
+iphone
+java
+javascript
+jpa
+jquery
+jsf
+json
+jsp
+linq
+linux
+magento
+matlab
+maven
+mongodb
+ms access
+mysql
+nhibernate
+node.js
+objective c
+opencv
+opengl
+osx
+perl
+php
+postgresql
+powershell
+python
+qt
+r
+ruby
+ruby on rails
+scala
+sharepoint
+silverlight
+spring
+sql
+sql server
+sqlite
+svn
+swing
+symfony
+tomcat
+tsql
+twitter bootstrap
+ubuntu
+unix
+vb.net
+vba
+visual c++
+visual studio
+wcf
+winapi
+windows
+windows phone 7
+winforms
+wordpress
+wpf
+xaml
+xcode
+xslt
+total
+rust
+SciPy
+Groovy
+JVM
+CLang
+LLDB
+GDB
+Cuda
+Swift
+CocoaPods
+NumPy
+ANT
+Enterprise JavaBeans
+Log4J
+SLF4J
+JUnit
+Google Guava
+Mockito
+easymock
+logback
+joda-time
+Julia language
+Microsoft Edge
+PyCharm
+ReSharper
+CLion
+TeamCity
+AppCode
+dotMemory
+dotPeek
+YouTrack
+LESS
+SASS
+JSX
+CoffeeScript
+TypeScript
+Dart
+Meteor framework
+Ember.js
+npm
+jspm
+Grunt
+Angular 2
+Kotlin
+Go Language
+React JS library
+zend framework
+SciKit Learn
+entity framework
+Microsoft
+Jetbrains
+Xamarin
+jira
+atlassian
