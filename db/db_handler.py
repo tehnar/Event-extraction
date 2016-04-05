@@ -16,9 +16,12 @@ class DatabaseHandler:
                                            .format(login, password, host))
         self.cursor = self.connection.cursor()
 
-    def add_article_or_get_id(self, article):
+    def get_article_id(self, article):
         self.cursor.execute("SELECT id FROM articles WHERE url=(%s)", (article.url,))
-        article_id = self.cursor.fetchone()
+        return self.cursor.fetchone()
+
+    def add_article_or_get_id(self, article):
+        article_id = self.get_article_id(article)
         if article_id is None:
             self.cursor.execute("""INSERT INTO articles (plain_text, raw_text, publish_date, site_name, url, annotation,
             author, caption) VALUES (%s, %s, %s, %s, %s, %s, %s, %s) RETURNING id""",

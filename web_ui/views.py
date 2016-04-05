@@ -5,17 +5,18 @@ from wtforms import IntegerField, DateField, SubmitField
 from wtforms.validators import DataRequired
 from flask_nav import Nav
 from flask_nav.elements import Navbar, View
+from db import DatabaseHandler
+
 import datetime
 
+db_handler = DatabaseHandler()
 nav = Nav()
-
 
 @nav.navigation()
 def main_navbar():
     return Navbar(
         'ExTractors',
         View('Events', 'events'),
-        View('Articles', 'articles'),
     )
 
 nav.init_app(app)
@@ -42,16 +43,5 @@ def events(count=10, date=datetime.datetime.now(), can_submit=True):
     if form.validate_on_submit() and can_submit:
         print(123)
         return events(form.article_count.data, form.start_date.data, False)
-    db_events = app.db_handler.get_events_starting_from(count, date)
+    db_events = db_handler.get_events_starting_from(count, date)
     return render_template("events.html", form=form, events=db_events)
-
-
-@app.route('/articles', methods=['GET', 'POST'])
-def articles():
-    print(request.method)
-    articles = app.db_handler.get_sites()
-    articles_forms = [FetchArticleForm(prefix=article[0]) for article in articles]
-    for form, article in zip(articles_forms, articles):
-        pass  # Todo: actually fetch articles from given source
-    
-    return render_template("articles.html", articles=zip(articles, articles_forms))
