@@ -1,34 +1,38 @@
-<html>
-    <head>
-        <link rel="stylesheet" type="text/css" href={{ url_for('static', filename='style.css') }}>
-        <title>
-            Test table
-        </title>
-    </head>
-
-    <body>
-        <form action="" method="post" name="get_articles">
-            <p> Number of articles in page: {{form.article_count(size=30)}} </p>
-            <p> Start date of articles: {{form.start_date(size=30)}} </p>
-            <p> {{form.hidden_tag()}} </p>
-            <input type="submit" value="Get articles!">
-        </form>
-        <table id="events">
+{% extends "bootstrap/base.html" %}
+{% block styles %}
+{{super()}}
+<link rel="stylesheet"
+      href="{{url_for('.static', filename='style.css')}}">
+{% endblock %}{% block title %} Test table {% endblock %}
+{% block navbar %}
+{{nav.main_navbar.render()}}
+{% endblock %}{% block content %}
+    <form action="" method="post" name="get_articles">
+        {{form.hidden_tag()}}
+        <div class="form-group">
+        {{form.article_count(class="col-lg-2", placeholder="Number of articles per page" )}}
+        {{form.start_date(class="col-lg-2", placeholder="Date of last article: dd.mm.yy")}} 
+        <button type="submit" class="btn btn-primary">Get articles</button>
+        </div>
+    </form>
+    <table class="events">
+        <thead> 
             <tr>
                 <th> Entity1 </th>
                 <th> Action </th>
                 <th> Entity2 </th>
                 <th> Sentence </th>
             </tr>
-            {% for event in events%}
-            <tr> 
-                <td> {{event[0]}} </td>
-                <td> {{event[2]}} </td>
-                <td> {{event[1]}} </td>
-                <td> {{event[3]}} </td>
-            </tr>
-            {% endfor %}
-        </table>
-    </body>
+        </thead>
+        {% for event in events%}
+        <tr> 
+            <td> {{event[0]}} </td>
+            <td> {{event[2]}} </td>
+            <td> {{event[1]}} </td>
+            <td> {{event[3]}} </td>
+        </tr>
+        {% endfor %}
+    </table>
+{% endblock %}
 </html>
     
