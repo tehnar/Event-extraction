@@ -1,12 +1,6 @@
-{% extends "bootstrap/base.html" %}
-{% block styles %}
-{{super()}}
-<link rel="stylesheet"
-      href="{{url_for('.static', filename='style.css')}}">
-{% endblock %}{% block title %} Test table {% endblock %}
-{% block navbar %}
-{{nav.main_navbar.render()}}
-{% endblock %}{% block content %}
+{% extends "base.html" %}
+{% block content %}
+</html>
     <form action="" method="post" name="get_articles">
         {{form.hidden_tag()}}
         <div class="form-group">
@@ -34,5 +28,3 @@
         {% endfor %}
     </table>
 {% endblock %}
-</html>
-    

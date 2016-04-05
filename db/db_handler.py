@@ -1,5 +1,6 @@
 import configparser
 import psycopg2
+from urllib.parse import urlparse
 
 
 class DatabaseHandler:
@@ -19,10 +20,10 @@ class DatabaseHandler:
         self.cursor.execute("SELECT id FROM articles WHERE url=(%s)", (article.url,))
         article_id = self.cursor.fetchone()
         if article_id is None:
-            self.cursor.execute("""INSERT INTO articles (plain_text, raw_text, publish_date, url, annotation, author,
-            caption) VALUES (%s, %s, %s, %s, %s, %s, %s) RETURNING id""",
-                                (article.text, article.raw_text, article.publish_date, article.url, article.summary,
-                                 article.author_name, article.header))
+            self.cursor.execute("""INSERT INTO articles (plain_text, raw_text, publish_date, site_name, url, annotation,
+            author, caption) VALUES (%s, %s, %s, %s, %s, %s, %s, %s) RETURNING id""",
+                                (article.text, article.raw_text, article.publish_date, article.site_name,
+                                 article.url, article.summary, article.author_name, article.header))
             self.connection.commit()
             return self.cursor.fetchone()[0]
         else:
@@ -78,3 +79,8 @@ class DatabaseHandler:
         WHERE article.publish_date IS NOT NULL AND article.publish_date <= %s
         ORDER BY article.publish_date DESC LIMIT %s""", (start_date, count))
         return self.cursor.fetchall()  # TODO: need to deal with NULL publish_date
+
+    def get_sites(self):
+        self.cursor.execute("""SELECT article.site_name, MAX(article.publish_date) FROM articles article
+        WHERE article.publish_date IS NOT NULL GROUP BY article.site_name""")
+        return self.cursor.fetchall()

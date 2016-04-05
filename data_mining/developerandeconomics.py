@@ -8,6 +8,7 @@ from urllib.parse import urljoin
 from dateutil import parser as date_parser
 
 SITE_ADDRESS = 'http://www.developereconomics.com'
+
 ARTICLES_PER_PAGE = 200
 HEADERS = {
     'Accept': '*/*',
@@ -34,7 +35,7 @@ def get_articles(article_count, save_folder, start=0):
             header = soup.find('h1', {'class': 'heading'}).get_text()
             with open(os.path.join(save_folder, link.split('/')[-2] + '.pkl'), 'wb') as f:
                 pickle.dump(Article(header=header, summary=summary, url=urljoin(SITE_ADDRESS, link),
-                                    publish_date=date_parser.parse(date)), f)
+                                    site_name=SITE_ADDRESS, publish_date=date_parser.parse(date)), f)
 
             print('\rArticles got: %d/%d' % (processed_articles, article_count), end='', file=sys.stderr)
 

@@ -52,7 +52,7 @@ def get_articles(article_count, save_folder, start=0):
 
             with open(os.path.join(save_folder, link.split('/')[-1] + '.pkl'), 'wb') as f:
                 pickle.dump(Article(header=header, summary=summary, text=text, publish_date=date_parser.parse(date),
-                                    url=urljoin(SITE_ADDRESS, link), author_name=author_name), f)
+                                    site_name=SITE_ADDRESS, url=urljoin(SITE_ADDRESS, link), author_name=author_name), f)
 
             processed_articles += 1
 

@@ -6,6 +6,7 @@ CREATE TABLE IF NOT EXISTS articles (
     plain_text TEXT,
     raw_text TEXT,
     publish_date TIMESTAMP,
+    site_name TEXT,
     url TEXT,
     annotation TEXT,
     author TEXT,
