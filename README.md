@@ -9,6 +9,8 @@
 # Создание базы данных
 psql postgres -f create.sql 
 
+MacOS psql path: /Applications/Postgres.app/Contents/Versions/9.5/bin/psql postgres -f create.sql 
+
 # Загрузка статей
 python3 spacy_event_extractor.py 
 
