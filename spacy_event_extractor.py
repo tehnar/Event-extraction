@@ -6,7 +6,7 @@ from spacy.en import English
 
 
 class SpacyEventExtractor:
-    _nlp = English(entity=False)
+    _nlp = English(entity=False, load_vectors=False)
     _keywords = list(map(lambda s: s.strip().lower(), open('keywords.txt', 'r').readlines()))
 
     def __init__(self):
@@ -43,8 +43,13 @@ class SpacyEventExtractor:
         if len(text) == 0:
             return []
         text_doc = SpacyEventExtractor._nlp(text, tag=False, parse=True, entity=False)
+        sentences = []
         for sentence in text_doc.sents:
             doc = SpacyEventExtractor._nlp(str(sentence))
+            sentences += [str(s) for s in doc.sents]
+        for sentence in sentences:
+            doc = SpacyEventExtractor._nlp(sentence)
+
             if len(set([word.string.strip().lower() for word in doc]) & set(SpacyEventExtractor._keywords)) == 0:
                 continue
             token = None
