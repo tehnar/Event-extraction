@@ -3,6 +3,7 @@
 # Пакеты для питона
 * psycopg2
 * flask-wtf
+* flask_nav
 
 # Создание базы данных
 psql postgres -f create.sql 
