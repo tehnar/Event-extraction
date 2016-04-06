@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% block content %}
 </html>
-    <table class="events">
+    <table class="sources">
         <thead> 
             <tr>
                 <th> Site </th>
@@ -12,7 +12,7 @@
         <tr> 
             <td> {{article[0]}} </td>
             <td> {{article[1]}} </td>
-            <td> 
+            <td>
                 <form action="" method="post">
                     {{form.hidden_tag()}}
                     {{form.fetch_articles(class="btn btn-primary")}}

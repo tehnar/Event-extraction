@@ -5,20 +5,131 @@
 }
 
 .events td, .events th {
-    border: 1px solid #ddd;
-    text-align: left;
+    border: 0 solid #DDD;
     padding: 8px;
     min-width: 150px;
     text-align: center;
 }
 
-.events tr:nth-child(even){background-color: #f2f2f2}
+.events tr:nth-child(even) {
+    background-color: #FAFAFA;
+}
 
-.events tr:hover {background-color: #ddd;}
+.events tr:hover {
+    background-color: #E9FFE9;
+}
 
 .events th {
     padding-top: 12px;
     padding-bottom: 12px;
     background-color: #4CAF50;
     color: white;
+}
+
+.events td.buttons {
+    vertical-align: top;
+}
+
+
+
+
+.events tr.selected_tr {
+    min-width: 200px;
+    text-align: center;
+    padding: 0;
+    margin: 0;
+}
+
+.events tr.selected_tr td {
+    padding: 2px;
+    padding-top: 6px;
+    margin: 0;
+}
+
+table.events textarea {
+    min-height: 100px;
+    width: 100%;
+    height: 100%;
+    border: 0;
+    resize: none;
+}
+
+
+
+
+ul.top_bar {
+    list-style-type: none;;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    background-color: #333;
+}
+
+ul.top_bar li{
+    float: left;
+}
+
+ul.top_bar span {
+    display: inline-block;
+    color: white;
+    text-align: center;
+    padding: 4px 20px 0px 13px;
+    font-size: 19pt;
+}
+
+ul.top_bar li a {
+    display: inline-block;
+    color: white;
+    text-align: center;
+    vertical-align: center;
+    padding: 11px 11px;
+    text-decoration: none;
+    font-size: 13pt;
+}
+
+ul.top_bar li a:hover {
+    background-color: #4CAF50;
+}
+
+
+
+form.buttons input {
+    width: 90%;
+    height: 40px;
+    margin-bottom: 1px;
+    margin-top: 1px;
+
+    font-size: 14px;
+    color: black;
+    text-align: center;
+    background: #E7E7E7;
+    border: 0;
+}
+
+form.buttons input:hover {
+    color: white;
+    background: #4CAF50;
+}
+
+form.buttons input.delete:hover {
+    color: white;
+    background: red;
+}
+
+form.buttons input.save {
+    color: white;
+    background-color: rgba(76, 175, 80, 0.8);
+}
+
+form.buttons input.save:hover {
+    background-color: rgba(76, 175, 80, 1);
+}
+
+form.buttons input.cancel {
+    color: white;
+    background: rgba(240, 0, 0, 0.8);
+}
+
+form.buttons input.cancel:hover {
+    background: rgba(240, 0, 0, 1);
 }

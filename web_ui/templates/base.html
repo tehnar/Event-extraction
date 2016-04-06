@@ -8,7 +8,12 @@
     Test table 
 {% endblock %}
 {% block navbar %}
-    {{nav.main_navbar.render()}}
+    <ul class="top_bar">
+        <li><span>ExTractor</span></li>
+        <li><a href="/events">Events</a></li>
+        <li><a href="/sources">Sources</a></li>
+        <li><a href="/statistics">Statistics</a></li>
+    </ul>
 {% endblock %}
 </html>
     
