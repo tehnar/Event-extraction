@@ -1,47 +1,41 @@
 {% extends "base.html" %}
 {% block content %}
 </html>
-    <table class="events">
-        <thead> 
-            <tr>
-                <th> Date </th>
-                <th> Entity1 </th>
-                <th> Action </th>
-                <th> Entity2 </th>
-                <th> Sentence </th>
-                <th> Actions </th>
-            </tr>
-        </thead>
+    <div class="table">
+            <form class="tr buttons" action="" method="post">
+                <span class="th"> Date </span>
+                <span class="th"> Entity1 </span>
+                <span class="th"> Action </span>
+                <span class="th"> Entity2 </span>
+                <span class="th"> Sentence </span>
+                <span class="th"> Actions </span>
+            </form>
         {% for event in events %}
             {% if event[0] == form.selected_event_id %}
-                <tr class="selected_tr">
-                    <td> <textarea> {{event[1]}} </textarea> </td>
-                    <td> <textarea> {{event[2]}} </textarea> </td>
-                    <td> <textarea> {{event[4]}} </textarea> </td>
-                    <td> <textarea> {{event[3]}} </textarea> </td>
-                    <td> <textarea> {{event[5]}} </textarea> </td>
-                    <td class="buttons">
-                        <form class="buttons" action="" method="post">
+                <form class="tr buttons selected_tr" action="" method="post" name="editForm">
+                    <span class="td"> {{form.date()}} </span>
+                    <span class="td"> {{form.entity1()}} </span>
+                    <span class="td"> {{form.action()}} </span>
+                    <span class="td"> {{form.entity2()}} </span>
+                    <span class="td"> {{form.sentence()}} </span>
+                    <span class="td buttons">
                             <input class="save" type="submit" name={{event[0]}} value="Save">
                             <input class="cancel" type="submit" name={{event[0]}} value="Cancel">
-                        </form>
-                    </td>
-                </tr>
+                    </span>
+                </form>
             {% else %}
-                <tr>
-                    <td> {{event[1]}} </td>
-                    <td> {{event[2]}} </td>
-                    <td> {{event[4]}} </td>
-                    <td> {{event[3]}} </td>
-                    <td> {{event[5]}} </td>
-                    <td class="buttons">
-                        <form class="buttons" action="" method="post">
+                <form class="tr buttons" action="" method="post">
+                    <span class="td"> {{event[1]}} </span>
+                    <span class="td"> {{event[2]}} </span>
+                    <span class="td"> {{event[4]}} </span>
+                    <span class="td"> {{event[3]}} </span>
+                    <span class="td"> {{event[5]}} </span>
+                    <span class="td buttons">
                             <input class="modify" type="submit" name={{event[0]}} value="Modify">
                             <input class="delete" type="submit" name={{event[0]}} value="Delete">
-                        </form>
-                    </td>
-                </tr>
+                    </span>
+                </form>
             {% endif %}
         {% endfor %}
-    </table>
+    </div>
 {% endblock %}

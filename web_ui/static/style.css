@@ -1,52 +1,59 @@
-.events {
+div.table {
+    display:table;
     font-family: "Trebuchet MS", Arial, Helvetica, sans-serif;
     border-collapse: collapse;
     width: 100%;
 }
 
-.events td, .events th {
+form.tr, div.tr
+{
+    display:table-row;
+}
+
+span.td, span.th {
+    display:table-cell;
     border: 0 solid #DDD;
     padding: 8px;
     min-width: 150px;
     text-align: center;
 }
 
-.events tr:nth-child(even) {
+form.tr:nth-child(even) {
     background-color: #FAFAFA;
 }
 
-.events tr:hover {
+form.tr:hover {
     background-color: #E9FFE9;
 }
 
-.events th {
+span.th {
     padding-top: 12px;
     padding-bottom: 12px;
     background-color: #4CAF50;
     color: white;
 }
 
-.events td.buttons {
+span.td.buttons {
     vertical-align: top;
 }
 
 
 
 
-.events tr.selected_tr {
+span.events tr.selected_tr {
     min-width: 200px;
     text-align: center;
     padding: 0;
     margin: 0;
 }
 
-.events tr.selected_tr td {
+span.events tr.selected_tr td {
     padding: 2px;
     padding-top: 6px;
     margin: 0;
 }
 
-table.events textarea {
+div.table textarea {
     min-height: 100px;
     width: 100%;
     height: 100%;
@@ -132,4 +139,10 @@ form.buttons input.cancel {
 
 form.buttons input.cancel:hover {
     background: rgba(240, 0, 0, 1);
+}
+
+
+
+span.td
+{
 }
