@@ -1,9 +1,9 @@
 import os
 import pickle
 from db.db_handler import DatabaseHandler
-
+from itertools import *
+from data_mining import ArticleDownloader
 from spacy.en import English
-
 
 class SpacyEventExtractor:
     _nlp = English(entity=False, load_vectors=False)
@@ -94,32 +94,17 @@ class SpacyEventExtractor:
 
 
 def main():
-    import data_mining.infoworld as infoworld
-    import data_mining.developerandeconomics as developerandeconomics
-    import data_mining.slashdot as slashdot
-    import os
-
-    tmp_dir = './tmp'
-
-    if not os.path.exists(tmp_dir):
-        os.makedirs(tmp_dir)
-
-        for downloader in [developerandeconomics, infoworld, slashdot]:
-            for i in range(3):
-                try:
-                    downloader.get_articles(100, tmp_dir, 100 * i)
-                except:
-                    import traceback
-                    print(traceback.format_exc())
-                print('')
     db_handler = DatabaseHandler()
-    for filename in os.listdir(tmp_dir):
-        with open(os.path.join(tmp_dir, filename), 'rb') as fin:
-            article = pickle.load(fin)
-            events = SpacyEventExtractor.extract(article.summary)
-            events += SpacyEventExtractor.extract(article.text)
-            for event in events:
-                print(db_handler.add_event_or_get_id(event, article))
+    for downloader in ArticleDownloader.downloaders:
+        try:
+            for article in islice(downloader.get_articles(), 0, 300):
+                events = SpacyEventExtractor.extract(article.summary)
+                events += SpacyEventExtractor.extract(article.text)
+                for event in events:
+                    print(db_handler.add_event_or_get_id(event, article))
+        except:
+            import traceback
+            print(traceback.format_exc())
 
 if __name__ == '__main__':
     main()
