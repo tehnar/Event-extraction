@@ -1,6 +1,3 @@
-CREATE DATABASE event_database;
-\connect event_database;
-
 CREATE TABLE IF NOT EXISTS articles (
     id SERIAL PRIMARY KEY,
     plain_text TEXT,
@@ -34,4 +31,8 @@ CREATE TABLE IF NOT EXISTS events (
 CREATE TABLE IF NOT EXISTS event_sources (
     source_id INTEGER REFERENCES articles (id),
     event_id INTEGER REFERENCES events (id)
+);
+
+CREATE TABLE IF NOT EXISTS settings (
+    version INTEGER
 );
