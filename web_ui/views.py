@@ -5,6 +5,8 @@ from wtforms import IntegerField, DateField, SubmitField
 from wtforms.validators import DataRequired
 from flask_nav import Nav
 from flask_nav.elements import Navbar, View
+from db import DatabaseHandler
+
 import datetime
 
 DEFAULT_ARTICLES_COUNT = 30
@@ -46,3 +48,4 @@ def articles():
 @app.route('/statistics', methods=['GET', 'POST'])
 def statistics():
     return render_template("statistics.html", form=Form())
+
