@@ -75,12 +75,19 @@ def events():
             form.entity2.data = event[3]
             form.sentence.data = event[5]
         elif action == "Save":
-            db_handler.change_event(data['entity1'], data['entity2'], data['action'], data['sentence'], event_id)
+            valid = True
+            sentence = data['sentence']
+            for key in ['entity1', 'entity2', 'action']:
+                if not data[key] in sentence:
+                    valid = False
+            if valid:
+                db_handler.change_event(data['entity1'], data['entity2'], data['action'], sentence, event_id)
+            else:
+                pass  # show some message about incorrect data
 
     events_wrapper.load_events(DEFAULT_ARTICLES_COUNT);
     db_events = db_handler.get_events_starting_from(events_wrapper.current_index, datetime.datetime.now())
     return render_template("events.html", form = form, events = db_events)
-
 
 @app.route('/sources', methods = ['GET', 'POST'])
 def articles():
