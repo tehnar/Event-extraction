@@ -27,19 +27,20 @@ class DatabaseHandler:
 
         if version is None or version != DatabaseHandler._VERSION:
             self.clear_db()
-            self.connection.set_isolation_level(0)
-            with open('db/create.sql') as create:
-                self.cursor.execute(str(create.read()))
-                self.connection.commit()
-            self.connection.set_isolation_level(1)
-            self.cursor.execute("INSERT INTO settings (version) VALUES (%s)", (DatabaseHandler._VERSION,))
-            self.connection.commit()
 
     def clear_db(self):
         for table_name in ['articles', 'entities', 'actions', 'events', 'event_sources', 'settings']:
             print(table_name, "DROP TABLE IF EXISTS {0} CASCADE".format(table_name))
             self.cursor.execute("DROP TABLE IF EXISTS {0} CASCADE".format(table_name))
             self.connection.commit()
+
+        self.connection.set_isolation_level(0)
+        with open('db/create.sql') as create:
+            self.cursor.execute(str(create.read()))
+            self.connection.commit()
+        self.connection.set_isolation_level(1)
+        self.cursor.execute("INSERT INTO settings (version) VALUES (%s)", (DatabaseHandler._VERSION,))
+        self.connection.commit()
 
     def get_article_id(self, article):
         self.cursor.execute("SELECT id FROM articles WHERE url=(%s)", (article.url,))

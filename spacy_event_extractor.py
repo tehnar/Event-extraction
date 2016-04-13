@@ -48,10 +48,12 @@ class SpacyEventExtractor:
             doc = SpacyEventExtractor._nlp(str(sentence))
             sentences += [str(s) for s in doc.sents]
         for sentence in sentences:
+            sentence = sentence.strip()
             doc = SpacyEventExtractor._nlp(sentence)
 
             if len(set([word.string.strip().lower() for word in doc]) & set(SpacyEventExtractor._keywords)) == 0:
                 continue
+
             token = None
             for word in doc:
                 if word.head is word:  # main verb
@@ -63,6 +65,10 @@ class SpacyEventExtractor:
             if token is None:
                 continue
             verb = token.head
+            aux_verbs = ""
+            for child in verb.children:
+                if child.dep_ == "aux" or child.dep_ == "neg":
+                    aux_verbs += str(child)
             subj = None
             for child in verb.children:
                 if child.dep_ == "dobj":
@@ -84,10 +90,10 @@ class SpacyEventExtractor:
             if len(set([word.strip().lower() for word in str(token).split()]) & keywords_set) + \
                     len(set(word.strip().lower() for word in subj_string.split()) & keywords_set) == 0:
                 continue  # there is no keywords in token and subj_string
-            events.append((str(token), str(verb), str(subj_string), str(sentence)))
+            events.append((str(token), str(aux_verbs) + str(verb), str(subj_string), str(sentence)))
             print(sentence)
             print('Object: ', token)
-            print('Action: ', verb)
+            print('Action: ', str(aux_verbs) + str(verb))
             print('Subject: ', subj_string)
 
         return events
@@ -95,11 +101,14 @@ class SpacyEventExtractor:
 
 def main():
     db_handler = DatabaseHandler()
+    db_handler.clear_db()
     for downloader in ArticleDownloader.downloaders:
         try:
-            for article in islice(downloader.get_articles(), 0, 300):
+            for article in islice(downloader.get_articles(), 0, 200):
                 events = SpacyEventExtractor.extract(article.summary)
                 events += SpacyEventExtractor.extract(article.text)
+                if db_handler.get_article_id(article) is not None:
+                    break
                 for event in events:
                     print(db_handler.add_event_or_get_id(event, article))
         except:
