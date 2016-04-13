@@ -26,16 +26,19 @@ class DatabaseHandler:
             version = version[0]
 
         if version is None or version != DatabaseHandler._VERSION:
-            for table_name in ['articles', 'entities', 'actions', 'events', 'event_sources', 'settings']:
-                print(table_name, "DROP TABLE IF EXISTS {0} CASCADE".format(table_name))
-                self.cursor.execute("DROP TABLE IF EXISTS {0} CASCADE".format(table_name))
-                self.connection.commit()
+            self.clear_db()
             self.connection.set_isolation_level(0)
             with open('db/create.sql') as create:
                 self.cursor.execute(str(create.read()))
                 self.connection.commit()
             self.connection.set_isolation_level(1)
             self.cursor.execute("INSERT INTO settings (version) VALUES (%s)", (DatabaseHandler._VERSION,))
+            self.connection.commit()
+
+    def clear_db(self):
+        for table_name in ['articles', 'entities', 'actions', 'events', 'event_sources', 'settings']:
+            print(table_name, "DROP TABLE IF EXISTS {0} CASCADE".format(table_name))
+            self.cursor.execute("DROP TABLE IF EXISTS {0} CASCADE".format(table_name))
             self.connection.commit()
 
     def get_article_id(self, article):
@@ -109,7 +112,7 @@ class DatabaseHandler:
         INNER JOIN entities entity2 ON entity2.id = event.entity2
         INNER JOIN actions action ON action.id = event.action
         WHERE article.publish_date IS NOT NULL AND article.publish_date <= %s
-        ORDER BY article.publish_date DESC LIMIT %s""", (start_date, count))
+        ORDER BY (article.publish_date, event.id) DESC LIMIT %s""", (start_date, count))
 
         return self.cursor.fetchall()  # TODO: need to deal with NULL publish_date
 
@@ -130,9 +133,9 @@ class DatabaseHandler:
         return self.cursor.fetchone()
 
     def change_event(self, entity1, entity2, action, sentence, event_id):
-        old_event = self.get_event_by_id(event_id)
-        for entity, old_entity in zip([entity1, entity2], [old_event[2], old_event[3]]):
-            self.cursor.execute("""UPDATE entities SET entity_name=%s WHERE entity_name=%s""", (entity, old_entity))
-        self.cursor.execute("""UPDATE actions SET action_name=%s WHERE action_name=%s""", (action, old_event[4]))
-        self.cursor.execute("""UPDATE events SET sentence=%s WHERE id=%s""", (sentence, event_id))
+        id1 = self.add_entity_or_get_id(entity1)
+        id2 = self.add_entity_or_get_id(entity2)
+        action_id = self.add_action_or_get_id(action)
+        self.cursor.execute("""UPDATE events SET entity1=%s, entity2=%s, action=%s, sentence=%s WHERE id=%s""",
+                            (id1, id2, action_id, sentence, event_id))
         self.connection.commit()
