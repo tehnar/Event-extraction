@@ -1,7 +1,60 @@
+<script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+<script>window.jQuery || document.write('<script src="{{
+  url_for('static', filename='jquery.js') }}">\x3C/script>')</script>
+
+<script type=text/javascript>
+  $SCRIPT_ROOT = {{ request.script_root|tojson|safe }};
+</script>
+
 {% extends "base.html" %}
 {% block content %}
+
+<script type=text/javascript>
+    function createForm(event) {
+        var html = '<form class="tr buttons" action="" method="post">';
+        for (var i = 1; i < 6; ++i) {
+            html += '<span class="td">' + event[i] + '</span>';
+        }
+        html += '<span class="td buttons">'
+        html += '<input class="modify" type="submit" name=' + event[0] + ' value="Modify">';
+        html += '<input class="delete" type="submit" name=' + event[0] + ' value="Delete">';
+        html += '</span> </form>';
+        return html;
+    }
+
+    function loadEvents() {
+        $.getJSON($SCRIPT_ROOT + '/_load_events', {}, function(data) {
+                var table = document.getElementById("events");
+                var events = data.result;
+                for (index in events) {
+                    table.innerHTML += createForm(events[index]);
+                }
+            });
+    }
+
+    $(function() {
+        $('a#test').bind('click', function() {
+            loadEvents();
+            return false;
+        });
+
+        $('a#info').bind('click', function() {
+            alert("scrollTop = " + $(this).scrollTop() + "\n" + "innerHeight = " + $(this).innerHeight() + "\n" + "height = " + $(this).height());
+        });
+
+    });
+
+    $(window).bind('scroll', function() {
+        if($(this).scrollTop() + window.innerHeight + 50 >= $("#events").innerHeight()) {
+            loadEvents();
+        }
+    });
+
+</script>
+
 </html>
-    <div class="table">
+    <a href="#" id="test">Test</a>
+    <div class="table" id="events">
             <form class="tr buttons" action="" method="post">
                 <span class="th"> Date </span>
                 <span class="th"> Entity1 </span>
@@ -38,4 +91,6 @@
             {% endif %}
         {% endfor %}
     </div>
+    <a href="#" id="info">Test</a>
+
 {% endblock %}

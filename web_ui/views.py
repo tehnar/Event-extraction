@@ -1,4 +1,4 @@
-from flask import redirect, url_for, render_template, request
+from flask import redirect, url_for, render_template, request, jsonify
 from web_ui import app
 from flask.ext.wtf import Form
 from wtforms import IntegerField, DateField, SubmitField, TextAreaField
@@ -6,9 +6,28 @@ from db import DatabaseHandler
 
 import datetime
 
-DEFAULT_ARTICLES_COUNT = 30
-db_handler = DatabaseHandler()
+class EventsWrapper:
+    def __init__(self, db_handler):
+        self.db_handler = db_handler
+        self.events = None
+        self.events_count = 0
+        self.current_index = 0
 
+    def __load_events__(self, count):
+        self.events = self.db_handler.get_events_starting_from(count, datetime.datetime.now())
+        self.events_count = len(self.events)
+
+    def load_events(self, count):
+        if self.current_index + count >= self.events_count:
+            self.__load_events__(self.current_index + count)
+
+        start_index = self.current_index
+        self.current_index = min(self.current_index + count, self.events_count)
+        return self.events[start_index : self.current_index]
+
+DEFAULT_ARTICLES_COUNT = 10
+db_handler = DatabaseHandler()
+events_wrapper = EventsWrapper(db_handler)
 
 class EventsForm(Form):
     selected_event_id = -1
@@ -27,9 +46,13 @@ class FetchArticleForm(Form):
 def redirect_to_events():
     return redirect(url_for('events'))
 
+@app.route('/_load_events')
+def load_events():
+    events = events_wrapper.load_events(DEFAULT_ARTICLES_COUNT)
+    return jsonify(result=events)
 
 @app.route('/events', methods = ['GET', 'POST'])
-def events(count = DEFAULT_ARTICLES_COUNT, date = datetime.datetime.now()):
+def events():
     form = EventsForm()
     if request.method == 'POST':
         actions = ['Save', 'Modify', 'Cancel', 'Delete']
@@ -54,7 +77,8 @@ def events(count = DEFAULT_ARTICLES_COUNT, date = datetime.datetime.now()):
         elif action == "Save":
             db_handler.change_event(data['entity1'], data['entity2'], data['action'], data['sentence'], event_id)
 
-    db_events = db_handler.get_events_starting_from(count, date)
+    events_wrapper.load_events(DEFAULT_ARTICLES_COUNT);
+    db_events = db_handler.get_events_starting_from(events_wrapper.current_index, datetime.datetime.now())
     return render_template("events.html", form = form, events = db_events)
 
 
