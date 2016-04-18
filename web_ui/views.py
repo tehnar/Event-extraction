@@ -3,19 +3,41 @@ from web_ui import app
 from flask.ext.wtf import Form
 from wtforms import IntegerField, DateField, SubmitField, TextAreaField
 from db import DatabaseHandler
-
+from event import Event
 import datetime
 
-DEFAULT_ARTICLES_COUNT = 30
+class EventsWrapper:
+    def __init__(self, db_handler):
+        self.db_handler = db_handler
+        self.events = None
+        self.events_count = 0
+        self.current_index = 0
+
+    def __load_events__(self, count):
+        self.events = self.db_handler.get_events_starting_from(count, datetime.datetime.now())
+        self.events_count = len(self.events)
+
+    def load_events(self, count):
+        if self.current_index + count >= self.events_count:
+            self.__load_events__(self.current_index + count)
+
+        start_index = self.current_index
+        self.current_index = min(self.current_index + count, self.events_count)
+        return self.events[start_index : self.current_index]
+
+DEFAULT_ARTICLES_COUNT = 10
+
 db_handler = DatabaseHandler()
+events_wrapper = EventsWrapper(db_handler)
 
 
 class EventsForm(Form):
     selected_event_id = -1
-    date = TextAreaField()
+    publish_date = TextAreaField()
     entity1 = TextAreaField()
     action = TextAreaField()
     entity2 = TextAreaField()
+    date = TextAreaField()
     sentence = TextAreaField()
 
 
@@ -46,11 +68,13 @@ def events(count = DEFAULT_ARTICLES_COUNT, date = datetime.datetime.now()):
         elif action == "Modify":
             form.selected_event_id = int(event_id)
             event = db_handler.get_event_by_id(event_id)
-            form.date.data = event[1]
-            form.entity1.data = event[2]
-            form.action.data = event[4]
-            form.entity2.data = event[3]
-            form.sentence.data = event[5]
+            form.publish_date.data = db_handler.get_event_publish_date(event_id)
+            form.entity1.data = event.entity1
+            form.action.data = event.action
+            form.entity2.data = event.entity2
+            form.sentence.data = event.sentence
+            form.date.data = event.date
+
         elif action == "Save":
             valid = True
             sentence = data['sentence']
@@ -58,10 +82,13 @@ def events(count = DEFAULT_ARTICLES_COUNT, date = datetime.datetime.now()):
                 if not data[key] in sentence:
                     valid = False
             if valid:
-                db_handler.change_event(data['entity1'], data['entity2'], data['action'], sentence, event_id)
+                db_handler.change_event(event_id, Event(data['entity1'], data['entity2'], data['action'], sentence,
+                                                        data['date']))
             else:
                 pass  # show some message about incorrect data
-    db_events = db_handler.get_events_starting_from(count, date)
+    events_wrapper.load_events(DEFAULT_ARTICLES_COUNT)
+    db_events = db_handler.get_events_starting_from(events_wrapper.current_index, datetime.datetime.now())
+    db_events = zip(db_events, [db_handler.get_event_publish_date(event.id) for event in db_events])
     return render_template("events.html", form = form, events = db_events)
 
 

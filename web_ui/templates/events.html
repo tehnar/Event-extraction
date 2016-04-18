@@ -7,16 +7,18 @@
                 <span class="th"> Entity1 </span>
                 <span class="th"> Action </span>
                 <span class="th"> Entity2 </span>
+                <span class="th"> Date </span>
                 <span class="th"> Sentence </span>
                 <span class="th"> Actions </span>
             </form>
-        {% for event in events %}
+        {% for event, publish_date in events %}
             {% if event[0] == form.selected_event_id %}
                 <form class="tr buttons selected_tr" action="" method="post" name="editForm">
-                    <span class="td"> {{form.date()}} </span>
+                    <span class="td"> {{form.publish_date()}} </span>
                     <span class="td"> {{form.entity1()}} </span>
                     <span class="td"> {{form.action()}} </span>
                     <span class="td"> {{form.entity2()}} </span>
+                    <span class="td"> {{form.date()}} </span>
                     <span class="td"> {{form.sentence()}} </span>
                     <span class="td buttons">
                             <input class="save" type="submit" name={{event[0]}} value="Save">
@@ -25,11 +27,12 @@
                 </form>
             {% else %}
                 <form class="tr buttons" action="" method="post">
-                    <span class="td"> {{event[1]}} </span>
-                    <span class="td"> {{event[2]}} </span>
-                    <span class="td"> {{event[4]}} </span>
-                    <span class="td"> {{event[3]}} </span>
-                    <span class="td"> {{event[5]}} </span>
+                    <span class="td"> {{publish_date}} </span>
+                    <span class="td"> {{event.entity1}} </span>
+                    <span class="td"> {{event.action}} </span>
+                    <span class="td"> {{event.entity2}} </span>
+                    <span class="td"> {{event.date}} </span>
+                    <span class="td"> {{event.sentence}} </span>
                     <span class="td buttons">
                             <input class="modify" type="submit" name={{event[0]}} value="Modify">
                             <input class="delete" type="submit" name={{event[0]}} value="Delete">

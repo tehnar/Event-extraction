@@ -1,9 +1,9 @@
-import os
-import pickle
 from db.db_handler import DatabaseHandler
 from itertools import *
 from data_mining import ArticleDownloader
 from spacy.en import English
+from event import Event
+
 
 class SpacyEventExtractor:
     _nlp = English(entity=False, load_vectors=False)
@@ -69,6 +69,7 @@ class SpacyEventExtractor:
             for child in verb.children:
                 if child.dep_ == "aux" or child.dep_ == "neg":
                     aux_verbs += str(child)
+
             subj = None
             for child in verb.children:
                 if child.dep_ == "dobj":
@@ -90,7 +91,7 @@ class SpacyEventExtractor:
             if len(set([word.strip().lower() for word in str(token).split()]) & keywords_set) + \
                     len(set(word.strip().lower() for word in subj_string.split()) & keywords_set) == 0:
                 continue  # there is no keywords in token and subj_string
-            events.append((str(token), str(aux_verbs) + str(verb), str(subj_string), str(sentence)))
+            events.append(Event(str(token), str(subj_string), str(aux_verbs) + str(verb), str(sentence)))
             print(sentence)
             print('Object: ', token)
             print('Action: ', str(aux_verbs) + str(verb))

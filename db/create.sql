@@ -20,11 +20,17 @@ CREATE TABLE IF NOT EXISTS actions (
     action_name TEXT
 );
 
+CREATE TABLE IF NOT EXISTS dates (
+    id SERIAL PRIMARY KEY,
+    date TIMESTAMP
+);
+
 CREATE TABLE IF NOT EXISTS events (
     id SERIAL PRIMARY KEY,
     entity1 INTEGER REFERENCES entities (id), 
     entity2 INTEGER REFERENCES entities (id),
     action INTEGER REFERENCES actions (id),
+    date INTEGER REFERENCES dates(id),
     sentence TEXT
 );
 

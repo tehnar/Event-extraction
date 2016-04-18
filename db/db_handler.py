@@ -1,11 +1,11 @@
 import configparser
 import psycopg2
 from urllib.parse import urlparse
-
+from event import Event
 
 class DatabaseHandler:
     _CONFIG_NAME = 'config.cfg'
-    _VERSION = 1
+    _VERSION = 2
 
     def __init__(self):
         config = configparser.ConfigParser()
@@ -29,8 +29,7 @@ class DatabaseHandler:
             self.clear_db()
 
     def clear_db(self):
-        for table_name in ['articles', 'entities', 'actions', 'events', 'event_sources', 'settings']:
-            print(table_name, "DROP TABLE IF EXISTS {0} CASCADE".format(table_name))
+        for table_name in ['articles', 'entities', 'actions', 'events', 'event_sources', 'settings', 'dates']:
             self.cursor.execute("DROP TABLE IF EXISTS {0} CASCADE".format(table_name))
             self.connection.commit()
 
@@ -78,17 +77,32 @@ class DatabaseHandler:
         else:
             return action_id[0]
 
+    def add_date_or_get_id(self, date):
+        self.cursor.execute("SELECT id FROM dates WHERE date=(%s)", (date,))
+
+        date_id = self.cursor.fetchone()
+        if date_id is None:
+            self.cursor.execute("INSERT INTO dates (date) VALUES (%s) RETURNING id", (date,))
+            self.connection.commit()
+            return self.cursor.fetchone()[0]
+        else:
+            return date_id[0]
+
     def add_event_or_get_id(self, event, article):
-        entity1_id = self.add_entity_or_get_id(event[0])
-        action_id = self.add_action_or_get_id(event[1])
-        entity2_id = self.add_entity_or_get_id(event[2])
-        sentence = event[3]
-        self.cursor.execute("SELECT id FROM events WHERE entity1=(%s) and entity2=(%s) and action=(%s) and sentence=(%s)",
-                                       (entity1_id, entity2_id, action_id, sentence))
+        entity1_id = self.add_entity_or_get_id(event.entity1)
+        action_id = self.add_action_or_get_id(event.action)
+        entity2_id = self.add_entity_or_get_id(event.entity2)
+        sentence = event.sentence
+        date = self.add_date_or_get_id(event.date)
+
+        self.cursor.execute("""SELECT id FROM events WHERE entity1=(%s) AND entity2=(%s) AND action=(%s)
+                            AND sentence=(%s) AND date=(%s)""",
+                                       (entity1_id, entity2_id, action_id, sentence, date))
         event_id = self.cursor.fetchone()
         if event_id is None:
-            self.cursor.execute("INSERT INTO events (entity1, entity2, action, sentence) VALUES (%s, %s, %s, %s) RETURNING id",
-                                (entity1_id, entity2_id, action_id, sentence))
+            self.cursor.execute("INSERT INTO events (entity1, entity2, action, sentence, date) "
+                                "VALUES (%s, %s, %s, %s, %s) RETURNING id",
+                                (entity1_id, entity2_id, action_id, sentence, date))
             self.connection.commit()
             event_id = self.cursor.fetchone()[0]
             self.cursor.execute("INSERT INTO event_sources (source_id, event_id) VALUES (%s, %s)",
@@ -105,17 +119,23 @@ class DatabaseHandler:
         # TODO: remove needless articles
 
     def get_events_starting_from(self, count, start_date):
-        self.cursor.execute("""SELECT event.id, article.publish_date, entity1.entity_name, entity2.entity_name, action.action_name, event.sentence
+        self.cursor.execute("""SELECT event.id, entity1.entity_name, entity2.entity_name, action.action_name,
+        event.sentence, date.date
         FROM events event
         INNER JOIN event_sources source ON source.event_id = event.id
         INNER JOIN articles article ON article.id = source.source_id
         INNER JOIN entities entity1 ON entity1.id = event.entity1
         INNER JOIN entities entity2 ON entity2.id = event.entity2
         INNER JOIN actions action ON action.id = event.action
+        INNER JOIN dates date ON date.id = event.date
         WHERE article.publish_date IS NOT NULL AND article.publish_date <= %s
         ORDER BY (article.publish_date, event.id) DESC LIMIT %s""", (start_date, count))
 
-        return self.cursor.fetchall()  # TODO: need to deal with NULL publish_date
+        events = []
+        for raw_event in self.cursor.fetchall():
+            events.append(Event(raw_event[1], raw_event[2], raw_event[3], raw_event[4], raw_event[5], id=raw_event[0]))
+            # TODO: need to deal with NULL publish_date
+        return events
 
     def get_sites(self):
         self.cursor.execute("""SELECT article.site_name, MAX(article.publish_date) FROM articles article
@@ -123,20 +143,31 @@ class DatabaseHandler:
         return self.cursor.fetchall()
 
     def get_event_by_id(self, event_id):
-        self.cursor.execute("""SELECT event.id, article.publish_date, entity1.entity_name, entity2.entity_name, action.action_name, event.sentence
+        self.cursor.execute("""SELECT event.id, entity1.entity_name, entity2.entity_name, action.action_name,
+        event.sentence, date.date
         FROM events event
         INNER JOIN event_sources source ON source.event_id = event.id
         INNER JOIN articles article ON article.id = source.source_id
         INNER JOIN entities entity1 ON entity1.id = event.entity1
         INNER JOIN entities entity2 ON entity2.id = event.entity2
         INNER JOIN actions action ON action.id = event.action
+        INNER JOIN dates date ON date.id = event.date
         WHERE event.id=%s""", (event_id,))
-        return self.cursor.fetchone()
+        raw_event = self.cursor.fetchone()
+        return Event(raw_event[1], raw_event[2], raw_event[3], raw_event[4], raw_event[5], id=raw_event[0])
 
-    def change_event(self, entity1, entity2, action, sentence, event_id):
-        id1 = self.add_entity_or_get_id(entity1)
-        id2 = self.add_entity_or_get_id(entity2)
-        action_id = self.add_action_or_get_id(action)
-        self.cursor.execute("""UPDATE events SET entity1=%s, entity2=%s, action=%s, sentence=%s WHERE id=%s""",
-                            (id1, id2, action_id, sentence, event_id))
+    def get_event_publish_date(self, event_id):
+        self.cursor.execute("""SELECT article.publish_date FROM events event
+        INNER JOIN event_sources source ON source.event_id = event.id
+        INNER JOIN articles article ON article.id = source.source_id
+        WHERE event.id = %s""", (event_id,))
+        return self.cursor.fetchone()[0]
+
+    def change_event(self, event_id, new_event):
+        id1 = self.add_entity_or_get_id(new_event.entity1)
+        id2 = self.add_entity_or_get_id(new_event.entity2)
+        action_id = self.add_action_or_get_id(new_event.action)
+        date_id = self.add_date_or_get_id(new_event.date)
+        self.cursor.execute("""UPDATE events SET entity1=%s, entity2=%s, action=%s, sentence=%s, date=%s
+        WHERE id=%s""", (id1, id2, action_id, new_event.sentence, date_id, event_id))
         self.connection.commit()
