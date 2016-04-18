@@ -1,4 +1,4 @@
-from flask import redirect, url_for, render_template, request
+from flask import redirect, url_for, render_template, request, jsonify
 from web_ui import app
 from flask.ext.wtf import Form
 from wtforms import IntegerField, DateField, SubmitField, TextAreaField
@@ -26,7 +26,6 @@ class EventsWrapper:
         return self.events[start_index : self.current_index]
 
 DEFAULT_ARTICLES_COUNT = 10
-
 db_handler = DatabaseHandler()
 events_wrapper = EventsWrapper(db_handler)
 
@@ -49,9 +48,13 @@ class FetchArticleForm(Form):
 def redirect_to_events():
     return redirect(url_for('events'))
 
+@app.route('/_load_events')
+def load_events():
+    events = events_wrapper.load_events(DEFAULT_ARTICLES_COUNT)
+    return jsonify(result=events)
 
 @app.route('/events', methods = ['GET', 'POST'])
-def events(count = DEFAULT_ARTICLES_COUNT, date = datetime.datetime.now()):
+def events():
     form = EventsForm()
     if request.method == 'POST':
         actions = ['Save', 'Modify', 'Cancel', 'Delete']
@@ -86,6 +89,7 @@ def events(count = DEFAULT_ARTICLES_COUNT, date = datetime.datetime.now()):
                                                         data['date']))
             else:
                 pass  # show some message about incorrect data
+
     events_wrapper.load_events(DEFAULT_ARTICLES_COUNT)
     db_events = db_handler.get_events_starting_from(events_wrapper.current_index, datetime.datetime.now())
     db_events = zip(db_events, [db_handler.get_event_publish_date(event.id) for event in db_events])
