@@ -1,10 +1,9 @@
+from urllib.parse import urljoin
+
 import requests
 from bs4 import BeautifulSoup
-import pickle
-import os
-import sys
-from urllib.parse import urljoin
 from dateutil import parser as date_parser
+
 from data_mining.article import Article
 
 
@@ -40,5 +39,5 @@ class ItNewsDownloader():
                 text += ' '.join(paragraph.strings)
 
             yield Article(header=header, summary=summary, text=text, url=urljoin(ItNewsDownloader.SITE_ADDRESS, link),
-                                    site_name=ItNewsDownloader.SITE_ADDRESS, author_name=author_name,
+                          site_name=ItNewsDownloader.SITE_ADDRESS, author_name=author_name,
                           publish_date=date_parser.parse(date))

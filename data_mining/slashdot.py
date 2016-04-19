@@ -1,9 +1,8 @@
-import sys
+import datetime
 from urllib.parse import urljoin
 
 import requests
 from bs4 import BeautifulSoup
-from dateutil import parser as date_parser
 
 from data_mining.article import Article
 
@@ -28,7 +27,7 @@ class SlashdotDownloader():
                 link = article_soup.find('span', {'class': 'story-title'}).find('a').get('href')
                 header = article_soup.find('span', {'class': 'story-title'}).find('a').get_text()
                 summary = ''
-                date = article_soup.find('time').get('datetime')[3:-9]
+                date = article_soup.find('time').get('datetime')
 
                 text = ' '.join(article_soup.find('div', {'class': 'p'}).strings)
                 author_name = article_soup.find('span', {'class': 'story-byline'}).get_text().replace('Posted', '').replace('by', '').split()[0]
@@ -36,6 +35,6 @@ class SlashdotDownloader():
                 yield Article(header=header, summary=summary, text=text,
                               url=urljoin(SlashdotDownloader.SITE_ADDRESS, link),
                               site_name=SlashdotDownloader.SITE_ADDRESS, author_name=author_name,
-                              publish_date=date_parser.parse(date))
+                              publish_date=datetime.datetime.strptime(date, 'on %A %B %d, %Y @%I:%M%p'))
 
             cur_page += 1

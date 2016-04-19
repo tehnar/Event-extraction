@@ -1,10 +1,9 @@
+from urllib.parse import urljoin
+
 import requests
 from bs4 import BeautifulSoup
-import pickle
-import os
-import sys
-from urllib.parse import urljoin
 from dateutil import parser as date_parser
+
 from data_mining.article import Article
 
 
@@ -49,7 +48,8 @@ class InfoworldDownloader():
 
                     soup = BeautifulSoup(requests.get(InfoworldDownloader.SITE_ADDRESS +
                                                       next_page_link.get('href')).content, 'html.parser')
-                yield Article(header=header, summary=summary, text=text, publish_date=date_parser.parse(date),
+                yield Article(header=header, summary=summary, text=text,
+                              publish_date=date_parser.parse(date),
                               site_name=InfoworldDownloader.SITE_ADDRESS,
                               url=urljoin(InfoworldDownloader.SITE_ADDRESS, link), author_name=author_name)
 

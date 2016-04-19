@@ -1,11 +1,9 @@
-import os
-import pickle
-import sys
-from .article import Article
+from dateutil import parser as date_parser
+from urllib.parse import urljoin
+
 import requests
 from bs4 import BeautifulSoup
-from urllib.parse import urljoin
-from dateutil import parser as date_parser
+
 from data_mining.article import Article
 
 
@@ -30,10 +28,12 @@ class DevAndEconomicsDownloader():
             for article_soup in article_soups:
                 link = article_soup.get('href')
                 soup = BeautifulSoup(requests.get(link, headers=DevAndEconomicsDownloader.HEADERS).content, 'html.parser')
-                date = soup.find('time').get_text()
+                date = ':'.join(soup.find('time').get('datetime').split(':')[:-1]) # TODO: use some regexp?
+                date = ' '.join(date.split('BST'))
                 summary = soup.find('div', {'itemtype': 'http://schema.org/Article'}).get_text()
                 header = soup.find('h1', {'class': 'heading'}).get_text()
                 yield Article(header=header, summary=summary, url=urljoin(DevAndEconomicsDownloader.SITE_ADDRESS, link),
-                              site_name=DevAndEconomicsDownloader.SITE_ADDRESS, publish_date=date_parser.parse(date))
+                              site_name=DevAndEconomicsDownloader.SITE_ADDRESS,
+                              publish_date=date_parser.parse(date))
 
             page += 1
