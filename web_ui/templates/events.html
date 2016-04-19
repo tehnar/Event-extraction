@@ -67,7 +67,7 @@
                 <span class="th"> Actions </span>
             </form>
         {% for event, publish_date in events %}
-            {% if event[0] == form.selected_event_id %}
+            {% if event.id == form.selected_event_id %}
                 <form class="tr buttons selected_tr" action="" method="post" name="editForm">
                     <span class="td"> {{form.publish_date()}} </span>
                     <span class="td"> {{form.entity1()}} </span>
@@ -76,8 +76,8 @@
                     <span class="td"> {{form.date()}} </span>
                     <span class="td"> {{form.sentence()}} </span>
                     <span class="td buttons">
-                            <input class="save" type="submit" name={{event[0]}} value="Save">
-                            <input class="cancel" type="submit" name={{event[0]}} value="Cancel">
+                            <input class="save" type="submit" name={{event.id}} value="Save">
+                            <input class="cancel" type="submit" name={{event.id}} value="Cancel">
                     </span>
                 </form>
             {% else %}
@@ -89,8 +89,8 @@
                     <span class="td"> {{event.date}} </span>
                     <span class="td"> {{event.sentence}} </span>
                     <span class="td buttons">
-                            <input class="modify" type="submit" name={{event[0]}} value="Modify">
-                            <input class="delete" type="submit" name={{event[0]}} value="Delete">
+                            <input class="modify" type="submit" name={{event.id}} value="Modify">
+                            <input class="delete" type="submit" name={{event.id}} value="Delete">
                     </span>
                 </form>
             {% endif %}
