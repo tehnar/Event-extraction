@@ -7,3 +7,6 @@ class Event:
         self.date = date
         self.location = location
         self.id = id
+
+    def json(self):
+        return self.__dict__

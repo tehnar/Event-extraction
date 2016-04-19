@@ -12,12 +12,14 @@
 <script type=text/javascript>
     function createForm(event) {
         var html = '<form class="tr buttons" action="" method="post">';
-        for (var i = 1; i < 6; ++i) {
-            html += '<span class="td">' + event[i] + '</span>';
+        html += '<span class="td">' + event[0] + '</span>';
+        var keys = ["entity1", "action", "entity2", "date", "sentence"]
+        for (key in keys) {
+            html += '<span class="td">' + event[1][keys[key]] + '</span>';
         }
         html += '<span class="td buttons">'
-        html += '<input class="modify" type="submit" name=' + event[0] + ' value="Modify">';
-        html += '<input class="delete" type="submit" name=' + event[0] + ' value="Delete">';
+        html += '<input class="modify" type="submit" name=' + event[1].id + ' value="Modify">';
+        html += '<input class="delete" type="submit" name=' + event[1].id + ' value="Delete">';
         html += '</span> </form>';
         return html;
     }

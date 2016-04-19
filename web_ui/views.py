@@ -6,7 +6,9 @@ from db import DatabaseHandler
 from event import Event
 import datetime
 
-class EventsWrapper:
+
+class EventsWrapper:  # TODO: for each client there should be its own instance of this class.
+    # TODO: also it should be resetted after page refresh
     def __init__(self, db_handler):
         self.db_handler = db_handler
         self.events = None
@@ -48,10 +50,12 @@ class FetchArticleForm(Form):
 def redirect_to_events():
     return redirect(url_for('events'))
 
+
 @app.route('/_load_events')
 def load_events():
     events = events_wrapper.load_events(DEFAULT_ARTICLES_COUNT)
-    return jsonify(result=events)
+    return jsonify(result=[(db_handler.get_event_publish_date(e.id), e.json()) for e in events])
+
 
 @app.route('/events', methods = ['GET', 'POST'])
 def events():
