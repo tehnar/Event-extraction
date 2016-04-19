@@ -4,6 +4,7 @@ from flask.ext.wtf import Form
 from wtforms import IntegerField, DateField, SubmitField, TextAreaField
 from db import DatabaseHandler
 from event import Event
+import re
 import datetime
 
 
@@ -56,48 +57,43 @@ def load_events():
     events = events_wrapper.load_events(DEFAULT_ARTICLES_COUNT)
     return jsonify(result=[(db_handler.get_event_publish_date(e.id), e.json()) for e in events])
 
+@app.route('/_delete_event')
+def delete_event_by_id():
+    id = request.args.get('id', 0, type=int)
+    db_handler.del_event_by_id(id)
+    return jsonify(result=None)
+
+@app.route('/_get_event')
+def get_event_by_id():
+    id = request.args.get('id', 0, type=int)
+    event = db_handler.get_event_by_id(id)
+    return jsonify(result=(db_handler.get_event_publish_date(event.id), event.json()))
+
+@app.route('/_modify_event')
+def modify_event_by_id():
+    event_id = request.args.get('id', 0, type=int)
+    entity1 = request.args.get('entity1', 0, type=str)
+    action = request.args.get('action', 0, type=str)
+    entity2 = request.args.get('entity2', 0, type=str)
+    sentence = request.args.get('sentence', 0, type=str)
+
+    if not entity1 in sentence:
+        return jsonify(result=None, error="Incorrect entity1!")
+    if not action in sentence:
+        return jsonify(result=None, error="Incorrect action!")
+    if not entity2 in sentence:
+        return jsonify(result=None, error="Incorrect entity2!")
+
+    db_handler.change_event(event_id, Event(entity1, entity2, action, sentence, None))
+
+    event = db_handler.get_event_by_id(event_id)
+    return jsonify(result=(db_handler.get_event_publish_date(event.id), event.json()), error=None)
 
 @app.route('/events', methods = ['GET', 'POST'])
 def events():
     form = EventsForm()
-    if request.method == 'POST':
-        actions = ['Save', 'Modify', 'Cancel', 'Delete']
-        data = {}
-        event_id = None
-        action = None
-        for x, y in request.form.items():
-            data[x] = y
-            if y in actions:
-                action = y
-                event_id = int(x)
-        if action == "Delete":
-            db_handler.del_event_by_id(event_id)
-        elif action == "Modify":
-            form.selected_event_id = int(event_id)
-            event = db_handler.get_event_by_id(event_id)
-            form.publish_date.data = db_handler.get_event_publish_date(event_id)
-            form.entity1.data = event.entity1
-            form.action.data = event.action
-            form.entity2.data = event.entity2
-            form.sentence.data = event.sentence
-            form.date.data = event.date
-
-        elif action == "Save":
-            valid = True
-            sentence = data['sentence']
-            for key in ['entity1', 'entity2', 'action']:
-                if not data[key] in sentence:
-                    valid = False
-            if valid:
-                db_handler.change_event(event_id, Event(data['entity1'], data['entity2'], data['action'], sentence,
-                                                        data['date']))
-            else:
-                pass  # show some message about incorrect data
-
     events_wrapper.load_events(DEFAULT_ARTICLES_COUNT)
-    db_events = db_handler.get_events_starting_from(events_wrapper.current_index, datetime.datetime.now())
-    db_events = zip(db_events, [db_handler.get_event_publish_date(event.id) for event in db_events])
-    return render_template("events.html", form = form, events = db_events)
+    return render_template("events.html", form = form)
 
 
 @app.route('/sources', methods = ['GET', 'POST'])
