@@ -29,7 +29,7 @@ var selected_events = [];
 loadEvents();
 
 function modifyEvent(id) {
-    $.getJSON($SCRIPT_ROOT + '/_get_event', {id: id}, function(data) {
+    $.post($SCRIPT_ROOT + '/_get_event', {id: id}, function(data) {
         document.getElementById(id).innerHTML= drawEditEventInnerHtml(data.result[0], data.result[1]);
     });
 }
@@ -37,11 +37,11 @@ function modifyEvent(id) {
 function deleteEvent(id) {
     removeElement(selected_events, id);
     document.getElementById(id).remove();
-    $.getJSON($SCRIPT_ROOT + '/_delete_event', {id: id}, function(data) {});
+    $.post($SCRIPT_ROOT + '/_delete_event', {id: id}, function(data) {});
 }
 
 function cancelEvent(id) {
-    $.getJSON($SCRIPT_ROOT + '/_get_event', {id: id}, function(data) {
+    $.post($SCRIPT_ROOT + '/_get_event', {id: id}, function(data) {
         document.getElementById(id).innerHTML = drawEventInnerHtml(data.result[0], data.result[1]);
     });
 }
@@ -77,7 +77,7 @@ function saveEvent(id) {
     var entity2 = event.childNodes.item(3).firstChild.value;
     //var sentence = event.childNodes.item(4).firstChild.value;
 
-    $.getJSON($SCRIPT_ROOT + '/_modify_event',
+    $.post($SCRIPT_ROOT + '/_modify_event',
         {id: id, entity1: entity1, action: action, entity2: entity2},
         function(data) {
             if (data.error == null) {
@@ -122,7 +122,7 @@ function drawEditEventInnerHtml(date, event) {
 }
 
 function loadEvents() {
-    $.getJSON($SCRIPT_ROOT + '/_load_events', {}, function(data) {
+    $.post($SCRIPT_ROOT + '/_load_events', {}, function(data) {
             var table = document.getElementById("events");
             var events = data.result;
             for (var index in events) {

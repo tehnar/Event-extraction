@@ -52,20 +52,20 @@ class FetchArticleForm(Form):
 def redirect_to_events():
     return redirect(url_for('events'))
 
-@app.route('/_load_events')
+@app.route('/_load_events', methods=['POST'])
 def load_events():
     events = events_wrapper.load_events(DEFAULT_ARTICLES_COUNT)
     return jsonify(result=[(db_handler.get_event_publish_date(e.id), e.json()) for e in events])
 
-@app.route('/_delete_event')
+@app.route('/_delete_event', methods=['POST'])
 def delete_event_by_id():
-    id = request.args.get('id', 0, type=int)
+    id = request.form.get('id', 0, type=int)
     db_handler.del_event_by_id(id)
     return jsonify(result=None)
 
-@app.route('/_get_event')
+@app.route('/_get_event', methods=['POST'])
 def get_event_by_id():
-    id = request.args.get('id', 0, type=int)
+    id = request.form.get('id', 0, type=int)
     event = db_handler.get_event_by_id(id)
     return jsonify(result=(db_handler.get_event_publish_date(event.id), event.json()))
 
@@ -81,12 +81,12 @@ def check_phrase(phrase, sentence):
             return False
     return True
 
-@app.route('/_modify_event')
+@app.route('/_modify_event', methods=['POST'])
 def modify_event_by_id():
-    event_id = request.args.get('id', 0, type=int)
-    entity1 = request.args.get('entity1', 0, type=str)
-    action = request.args.get('action', 0, type=str)
-    entity2 = request.args.get('entity2', 0, type=str)
+    event_id = request.form.get('id', 0, type=int)
+    entity1 = request.form.get('entity1', 0, type=str)
+    action = request.form.get('action', 0, type=str)
+    entity2 = request.form.get('entity2', 0, type=str)
 
     entity1 = ' '.join(entity1.split())
     action = ' '.join(action.split())
