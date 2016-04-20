@@ -55,7 +55,6 @@ function clickEvent(id) {
         selected_events.push(id);
         document.getElementById(id).setAttribute("class", "selected");
     }
-    console.log(selected_events)
 }
 
 function joinEvents() {
@@ -63,9 +62,15 @@ function joinEvents() {
         return;
     }
 
-    $.post($SCRIPT_ROOT + '/_join_events', {ids: selected_events}, function(data) {
-        while (selected_events.length > 0) {
-            clickEvent(selected_events[0]);
+    var joinEntities1 = confirm("Do you want to merge 'Entity1' fields?");
+    var joinActions = confirm("Do you want to merge 'Action' fields?");
+    var joinEntities2 = confirm("Do you want to merge 'Entity2' fields?");
+
+    $.post($SCRIPT_ROOT + '/_join_events',
+        {ids: selected_events, joinEntities1: joinEntities1, joinActions: joinActions, joinEntities2: joinEntities2},
+        function(data) {
+            while (selected_events.length > 0) {
+                clickEvent(selected_events[0]);
         }
     });
 }

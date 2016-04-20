@@ -222,8 +222,12 @@ class DatabaseHandler:
     def get_entity_set_for_event_by_id(self, event_id):
         return self.get_set_for_event_by_id("entities_sets", event_id)
 
-    def join_entities(self, ids):
-        self.join("entities_sets", ids)
+    def join_entities_by_events(self, ids, mod):
+        entities_ids = []
+        for id in ids:
+            self.cursor.execute("""SELECT entity""" + mod + """ FROM events WHERE id=%s""", (id,))
+            entities_ids.append(self.cursor.fetchone()[0])
+        self.join("entities_sets", entities_ids)
 
     def del_entity_from_set(self, event_id):
         self.del_from_set("entities_sets", event_id)
@@ -231,8 +235,12 @@ class DatabaseHandler:
     def get_action_set_for_event_by_id(self, event_id):
         return self.get_set_for_event_by_id("actions_sets", event_id)
 
-    def join_actions(self, ids):
-        self.join("actions_sets", ids)
+    def join_actions_by_events(self, ids):
+        actions_ids = []
+        for id in ids:
+            self.cursor.execute("""SELECT action FROM events WHERE id=%s""", (id,))
+            actions_ids.append(self.cursor.fetchone()[0])
+        self.join("actions_sets", actions_ids)
 
     def del_action_from_set(self, event_id):
         self.del_from_set("actions_sets", event_id)

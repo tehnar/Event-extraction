@@ -72,7 +72,21 @@ def get_event_by_id():
 @app.route('/_join_events', methods=['POST'])
 def join_events():
     ids = request.form.getlist('ids[]')
+    join_entities1 = request.form.get('joinEntities1', 0, type=bool)
+    join_actions = request.form.get('joinActions', 0, type=bool)
+    join_entities2 = request.form.get('joinEntities2', 0, type=bool)
+
     db_handler.join_events(ids)
+
+    if join_entities1:
+        db_handler.join_entities_by_events(ids, "1")
+
+    if join_actions:
+        db_handler.join_actions_by_events(ids)
+
+    if join_entities2:
+        db_handler.join_entities_by_events(ids, "2")
+
     return jsonify(result=None)
 
 def check_phrase(phrase, sentence):
