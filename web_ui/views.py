@@ -4,7 +4,6 @@ from flask.ext.wtf import Form
 from wtforms import IntegerField, DateField, SubmitField, TextAreaField
 from db import DatabaseHandler
 from event import Event
-import re
 import datetime
 
 
@@ -18,6 +17,11 @@ class EventsWrapper:  # TODO: for each client there should be its own instance o
 
     def __load_events__(self, count):
         self.events = self.db_handler.get_events_starting_from(count, datetime.datetime.now())
+
+        #TODO: del event_set
+        for event in self.events:
+            event.event_set = self.db_handler.get_event_set_for_event_by_id(event.id)
+
         self.events_count = len(self.events)
 
     def load_events(self, count):
@@ -32,7 +36,6 @@ DEFAULT_ARTICLES_COUNT = 10
 db_handler = DatabaseHandler()
 events_wrapper = EventsWrapper(db_handler)
 
-
 class EventsForm(Form):
     selected_event_id = -1
     publish_date = TextAreaField()
@@ -42,15 +45,12 @@ class EventsForm(Form):
     date = TextAreaField()
     sentence = TextAreaField()
 
-
 class FetchArticleForm(Form):
     fetch_articles = SubmitField('Fetch new articles')
-
 
 @app.route('/')
 def redirect_to_events():
     return redirect(url_for('events'))
-
 
 @app.route('/_load_events')
 def load_events():
@@ -69,19 +69,37 @@ def get_event_by_id():
     event = db_handler.get_event_by_id(id)
     return jsonify(result=(db_handler.get_event_publish_date(event.id), event.json()))
 
+@app.route('/_join_events', methods=['POST'])
+def join_events():
+    ids = request.form.getlist('ids[]')
+    db_handler.join_events(ids)
+    return jsonify(result=None)
+
+def check_phrase(phrase, sentence):
+    for word in phrase.split():
+        if not word in sentence:
+            return False
+    return True
+
 @app.route('/_modify_event')
 def modify_event_by_id():
     event_id = request.args.get('id', 0, type=int)
     entity1 = request.args.get('entity1', 0, type=str)
     action = request.args.get('action', 0, type=str)
     entity2 = request.args.get('entity2', 0, type=str)
-    sentence = request.args.get('sentence', 0, type=str)
 
-    if not entity1 in sentence:
+    entity1 = ' '.join(entity1.split())
+    action = ' '.join(action.split())
+    entity2 = ' '.join(entity2.split())
+
+    #sentence = request.args.get('sentence', 0, type=str)
+    sentence = db_handler.get_event_by_id(event_id).sentence
+
+    if not check_phrase(entity1, sentence):
         return jsonify(result=None, error="Incorrect entity1!")
-    if not action in sentence:
+    if not check_phrase(action, sentence):
         return jsonify(result=None, error="Incorrect action!")
-    if not entity2 in sentence:
+    if not check_phrase(entity2, sentence):
         return jsonify(result=None, error="Incorrect entity2!")
 
     db_handler.change_event(event_id, Event(entity1, entity2, action, sentence, None))

@@ -113,8 +113,12 @@ class DatabaseHandler:
         return event_id
 
     def del_event_by_id(self, event_id):
+        #update sets
+        self.del_event_from_set(event_id)
+
         self.cursor.execute("""DELETE FROM event_sources WHERE event_id=(%s)""", (event_id,))
         self.cursor.execute("""DELETE FROM events WHERE id=(%s)""", (event_id,))
+
         self.connection.commit()
         # TODO: remove needless articles
 
@@ -171,3 +175,64 @@ class DatabaseHandler:
         self.cursor.execute("""UPDATE events SET entity1=%s, entity2=%s, action=%s, sentence=%s, date=%s
         WHERE id=%s""", (id1, id2, action_id, new_event.sentence, date_id, event_id))
         self.connection.commit()
+
+    #TODO: check 'del_action' and 'del_entity' (add set update)
+
+    def get_set_for_event_by_id(self, table, event_id):
+        self.cursor.execute("""SELECT parent_id FROM """ + table + """ WHERE child_id=%s""", (event_id,))
+        result = self.cursor.fetchone()
+        if result is None:
+            return event_id
+        return result[0]
+
+    def join(self, table, ids):
+        if len(ids) > 1:
+            for id in ids:
+                self.join_two(table, id, ids[0])
+
+    def join_two(self, table, event1_id, event2_id):
+        event1_id = self.get_set_for_event_by_id(table, event1_id)
+        event2_id = self.get_set_for_event_by_id(table, event2_id)
+
+        if event1_id != event2_id:
+            self.cursor.execute("""INSERT INTO """ + table + """ (child_id, parent_id) VALUES (%s, %s) """, (event1_id, event2_id))
+            self.cursor.execute("""UPDATE """ + table + """ SET parent_id=%s WHERE parent_id=%s""", (event2_id, event1_id))
+            self.connection.commit()
+
+    def del_from_set(self, table, event_id):
+        self.cursor.execute("""SELECT child_id FROM """ + table + """ WHERE parent_id=%s""", (event_id,))
+        result = self.cursor.fetchall()
+        if len(result) > 0:
+            self.cursor.execute("""DELETE FROM """ + table + """ WHERE parent_id=%s""", (event_id,))
+            self.connection.commit()
+            self.join(table, result)
+        else:
+            self.cursor.execute("""DELETE FROM """ + table + """ WHERE child_id=%s""", (event_id,))
+            self.connection.commit()
+
+    def get_event_set_for_event_by_id(self, event_id):
+        return self.get_set_for_event_by_id("events_sets", event_id)
+
+    def join_events(self, ids):
+        self.join("events_sets", ids)
+
+    def del_event_from_set(self, event_id):
+        self.del_from_set("events_sets", event_id)
+
+    def get_entity_set_for_event_by_id(self, event_id):
+        return self.get_set_for_event_by_id("entities_sets", event_id)
+
+    def join_entities(self, ids):
+        self.join("entities_sets", ids)
+
+    def del_entity_from_set(self, event_id):
+        self.del_from_set("entities_sets", event_id)
+
+    def get_action_set_for_event_by_id(self, event_id):
+        return self.get_set_for_event_by_id("actions_sets", event_id)
+
+    def join_actions(self, ids):
+        self.join("actions_sets", ids)
+
+    def del_action_from_set(self, event_id):
+        self.del_from_set("actions_sets", event_id)

@@ -113,9 +113,9 @@ class SpacyEventExtractor:
 
 
 def main():
-    for sent in open('samples.txt', 'r').readlines():
-        SpacyEventExtractor.extract(sent)
-    exit()
+    #for sent in open('samples.txt', 'r').readlines():
+    #    SpacyEventExtractor.extract(sent)
+    #exit()
     db_handler = DatabaseHandler()
     db_handler.clear_db()
     for downloader in ArticleDownloader.downloaders:

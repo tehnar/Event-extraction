@@ -42,3 +42,19 @@ CREATE TABLE IF NOT EXISTS event_sources (
 CREATE TABLE IF NOT EXISTS settings (
     version INTEGER
 );
+
+CREATE TABLE IF NOT EXISTS events_sets (
+    child_id INTEGER REFERENCES events (id),
+    parent_id INTEGER REFERENCES events (id)
+);
+
+
+CREATE TABLE IF NOT EXISTS entities_sets (
+    child_id INTEGER REFERENCES entities (id),
+    parent_id INTEGER REFERENCES entities (id)
+);
+
+CREATE TABLE IF NOT EXISTS actions_sets (
+    child_id INTEGER REFERENCES actions (id),
+    parent_id INTEGER REFERENCES actions (id)
+);

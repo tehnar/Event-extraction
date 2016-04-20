@@ -17,6 +17,14 @@ tr {
     margin: 0;
 }
 
+tr.selected {
+    background-color: #f4fa88;
+}
+
+tr.selected:hover {
+    background-color: #faf95a;
+}
+
 td, td.th {
     display:table-cell;
     border: 0 solid #DDD;
