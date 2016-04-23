@@ -132,13 +132,12 @@ class DatabaseHandler:
         INNER JOIN entities entity2 ON entity2.id = event.entity2
         INNER JOIN actions action ON action.id = event.action
         INNER JOIN dates date ON date.id = event.date
-        WHERE article.publish_date IS NOT NULL AND article.publish_date <= %s
-        ORDER BY (article.publish_date, event.id) DESC LIMIT %s""", (start_date, count))
+        WHERE article.publish_date <= %s
+        ORDER BY article.publish_date DESC, event.id LIMIT %s""", (start_date, count))
 
         events = []
         for raw_event in self.cursor.fetchall():
             events.append(Event(raw_event[1], raw_event[2], raw_event[3], raw_event[4], raw_event[5], id=raw_event[0]))
-            # TODO: need to deal with NULL publish_date
         return events
 
     def get_sites(self):

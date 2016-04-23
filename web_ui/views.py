@@ -1,4 +1,4 @@
-from flask import redirect, url_for, render_template, request, jsonify
+from flask import session, redirect, url_for, render_template, request, jsonify
 from web_ui import app
 from flask.ext.wtf import Form
 from wtforms import IntegerField, DateField, SubmitField, TextAreaField
@@ -7,34 +7,9 @@ from event import Event
 import datetime
 
 
-class EventsWrapper:  # TODO: for each client there should be its own instance of this class.
-    # TODO: also it should be resetted after page refresh
-    def __init__(self, db_handler):
-        self.db_handler = db_handler
-        self.events = None
-        self.events_count = 0
-        self.current_index = 0
-
-    def __load_events__(self, count):
-        self.events = self.db_handler.get_events_starting_from(count, datetime.datetime.now())
-
-        #TODO: del event_set
-        for event in self.events:
-            event.event_set = self.db_handler.get_event_set_for_event_by_id(event.id)
-
-        self.events_count = len(self.events)
-
-    def load_events(self, count):
-        if self.current_index + count >= self.events_count:
-            self.__load_events__(self.current_index + count)
-
-        start_index = self.current_index
-        self.current_index = min(self.current_index + count, self.events_count)
-        return self.events[start_index : self.current_index]
-
 DEFAULT_ARTICLES_COUNT = 10
 db_handler = DatabaseHandler()
-events_wrapper = EventsWrapper(db_handler)
+
 
 class EventsForm(Form):
     selected_event_id = -1
@@ -45,17 +20,25 @@ class EventsForm(Form):
     date = TextAreaField()
     sentence = TextAreaField()
 
+
 class FetchArticleForm(Form):
     fetch_articles = SubmitField('Fetch new articles')
+
 
 @app.route('/')
 def redirect_to_events():
     return redirect(url_for('events'))
 
+
 @app.route('/_load_events', methods=['POST'])
 def load_events():
-    events = events_wrapper.load_events(DEFAULT_ARTICLES_COUNT)
-    return jsonify(result=[(db_handler.get_event_publish_date(e.id), e.json()) for e in events])
+    session["start_index"] = session["current_index"]
+    session["current_index"] += DEFAULT_ARTICLES_COUNT
+    print(123)
+    events = db_handler.get_events_starting_from(session["current_index"], datetime.datetime.now())
+    return jsonify(result=[(db_handler.get_event_publish_date(e.id), e.json()) for e in
+                           events[session["start_index"]: session["current_index"]]])
+
 
 @app.route('/_delete_event', methods=['POST'])
 def delete_event_by_id():
@@ -63,11 +46,13 @@ def delete_event_by_id():
     db_handler.del_event_by_id(id)
     return jsonify(result=None)
 
+
 @app.route('/_get_event', methods=['POST'])
 def get_event_by_id():
     id = request.form.get('id', 0, type=int)
     event = db_handler.get_event_by_id(id)
     return jsonify(result=(db_handler.get_event_publish_date(event.id), event.json()))
+
 
 @app.route('/_join_events', methods=['POST'])
 def join_events():
@@ -89,11 +74,13 @@ def join_events():
 
     return jsonify(result=None)
 
+
 def check_phrase(phrase, sentence):
     for word in phrase.split():
         if not word in sentence:
             return False
     return True
+
 
 @app.route('/_modify_event', methods=['POST'])
 def modify_event_by_id():
@@ -121,10 +108,11 @@ def modify_event_by_id():
     event = db_handler.get_event_by_id(event_id)
     return jsonify(result=(db_handler.get_event_publish_date(event.id), event.json()), error=None)
 
+
 @app.route('/events', methods = ['GET', 'POST'])
 def events():
     form = EventsForm()
-    events_wrapper.load_events(DEFAULT_ARTICLES_COUNT)
+    session["start_index"] = session["current_index"] = 0
     return render_template("events.html", form = form)
 
 

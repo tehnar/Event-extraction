@@ -136,8 +136,8 @@ function loadEvents() {
         });
 }
 
-$(window).bind('scroll', function() {
+$(window).bind('scroll', _.throttle(function() {
     if($(this).scrollTop() + window.innerHeight + 50 >= $("#events").innerHeight()) {
         loadEvents();
     }
-});
+}, 100));
