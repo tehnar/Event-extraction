@@ -98,7 +98,7 @@ function drawEvent(date, event) {
 }
 
 function getSentence(event) {
-    var words = (event["sentence"].replace(/,/g, " ,").replace(/\./g, " .")).split(" ");
+    var words = (event["sentence"] + " ").replace(/, /g, " , ").replace(/\. /g, " . ").split(" ");
 
     var colors = ["red", "green", "blue"];
     var keys = ["entity1", "action", "entity2"];
