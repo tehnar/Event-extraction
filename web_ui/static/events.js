@@ -97,13 +97,51 @@ function drawEvent(date, event) {
     return '<tr id=' + event.id + '>' + drawEventInnerHtml(date, event) + '</tr>';
 }
 
+function getSentence(event) {
+    var words = (event["sentence"].replace(/,/g, " ,").replace(/\./g, " .")).split(" ");
+
+    var colors = ["red", "green", "blue"];
+    var keys = ["entity1", "action", "entity2"];
+    var data = [[]];
+    for (var key in keys) {
+        data[key] = event[keys[key]].split(" ");
+    }
+
+    for (var key in keys) {
+        for (var i in data[key]) {
+            for (var word in words) {
+                if (words[word] == data[key][i]) {
+                    words[word] = '<span class="' + colors[key] +'">' + words[word] + '</span>';
+                    break;
+                }
+            }
+        }
+    }
+
+    var result = "";
+    for (var i in words) {
+        if (words[i] == "") {
+            continue;
+        }
+        if (i != 0 && words[i] != ',' && words[i] != '.') {
+            result += " ";
+        }
+        result += words[i];
+    }
+    return result;
+}
+
 function drawEventInnerHtml(date, event) {
     var html = '<td onclick=clickEvent(' + event.id + ')>' + date + '</td>';
     //var html = '<td onclick=clickEvent(' + event.id + ')>' + event.id + ' (' + event.event_set + ')</td>';
-    var keys = ["entity1", "action", "entity2", "sentence"];
+    var keys = ["entity1", "action", "entity2"];
     for (key in keys) {
         html += '<td onclick=clickEvent(' + event.id + ')>' + event[keys[key]] + '</td>';
     }
+
+    html += '<td onclick=clickEvent(' + event.id + ')>' + getSentence(event) + '</td>';
+
+
     html += '<td class="buttons">';
     html += '<button class="modify" onclick=modifyEvent(' + event.id + ')>Modify</button>';
     html += '<button class="delete" onclick=deleteEvent(' + event.id + ')>Delete</button>';

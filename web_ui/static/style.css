@@ -26,6 +26,7 @@ tr.selected:hover {
 }
 
 td, td.th {
+    style: none;
     display:table-cell;
     border: 0 solid #DDD;
     padding: 8px;
@@ -74,6 +75,7 @@ textarea {
 }
 
 ul.top_bar {
+    list-style-type: none;  
     margin: 0;
     padding: 0;
     overflow: hidden;
@@ -147,4 +149,22 @@ td.buttons button.cancel {
 
 td.buttons button.cancel:hover {
     background: rgba(240, 0, 0, 1);
+}
+
+span.red {
+    color: red;
+    font-style: italic;
+    font-weight: bold;
+}
+
+span.green {
+    color: darkgreen;
+    font-style: italic;
+    font-weight: bold;
+}
+
+span.blue {
+    color: blue;
+    font-style: italic;
+    font-weight: bold;
 }
