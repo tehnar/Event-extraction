@@ -6,7 +6,6 @@ from db import DatabaseHandler
 from event import Event
 import datetime
 
-
 DEFAULT_ARTICLES_COUNT = 10
 db_handler = DatabaseHandler()
 
@@ -34,9 +33,8 @@ def redirect_to_events():
 def load_events():
     session["start_index"] = session["current_index"]
     session["current_index"] += DEFAULT_ARTICLES_COUNT
-    print(123)
     events = db_handler.get_events_starting_from(session["current_index"], datetime.datetime.now())
-    return jsonify(result=[(db_handler.get_event_publish_date(e.id), e.json()) for e in
+    return jsonify(result=[(db_handler.get_event_publish_date(e.id), db_handler.get_event_source(e.id), e.json()) for e in
                            events[session["start_index"]: session["current_index"]]])
 
 

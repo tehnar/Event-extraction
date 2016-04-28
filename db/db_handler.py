@@ -166,6 +166,13 @@ class DatabaseHandler:
         WHERE event.id = %s""", (event_id,))
         return self.cursor.fetchone()[0]
 
+    def get_event_source(self, event_id):
+        self.cursor.execute("""SELECT article.url FROM events event
+        INNER JOIN event_sources source ON source.event_id = event.id
+        INNER JOIN articles article ON article.id = source.source_id
+        WHERE event.id = %s""", (event_id,))
+        return self.cursor.fetchone()[0]
+
     def change_event(self, event_id, new_event):
         id1 = self.add_entity_or_get_id(new_event.entity1)
         id2 = self.add_entity_or_get_id(new_event.entity2)

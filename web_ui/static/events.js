@@ -30,7 +30,7 @@ loadEvents();
 
 function modifyEvent(id) {
     $.post($SCRIPT_ROOT + '/_get_event', {id: id}, function(data) {
-        document.getElementById(id).innerHTML= drawEditEventInnerHtml(data.result[0], data.result[1]);
+        document.getElementById(id).innerHTML= drawEditEventInnerHtml(data.result[0], data.result[1], data.result[2]);
     });
 }
 
@@ -42,7 +42,7 @@ function deleteEvent(id) {
 
 function cancelEvent(id) {
     $.post($SCRIPT_ROOT + '/_get_event', {id: id}, function(data) {
-        document.getElementById(id).innerHTML = drawEventInnerHtml(data.result[0], data.result[1]);
+        document.getElementById(id).innerHTML = drawEventInnerHtml(data.result[0], data.result[1], data.result[2]);
     });
 }
 
@@ -86,24 +86,25 @@ function saveEvent(id) {
         {id: id, entity1: entity1, action: action, entity2: entity2},
         function(data) {
             if (data.error == null) {
-                event.innerHTML = drawEventInnerHtml(data.result[0], data.result[1]);
+                event.innerHTML = drawEventInnerHtml(data.result[0], data.result[1], data.result[2]);
             } else {
                 alert(data.error)
             }
         });
 }
 
-function drawEvent(date, event) {
-    return '<tr id=' + event.id + '>' + drawEventInnerHtml(date, event) + '</tr>';
+function drawEvent(date, source, event) {
+    return '<tr id=' + event.id + '>' + drawEventInnerHtml(date, source, event) + '</tr>';
 }
 
-function drawEventInnerHtml(date, event) {
+function drawEventInnerHtml(date, source, event) {
     var html = '<td onclick=clickEvent(' + event.id + ')>' + date + '</td>';
     //var html = '<td onclick=clickEvent(' + event.id + ')>' + event.id + ' (' + event.event_set + ')</td>';
     var keys = ["entity1", "action", "entity2", "sentence"];
     for (key in keys) {
         html += '<td onclick=clickEvent(' + event.id + ')>' + event[keys[key]] + '</td>';
     }
+    html += '<td onclick=clickEvent(' + event.id + ')>' + '<a href="' + source + '">' + source + '</a>' + '</td>';
     html += '<td class="buttons">';
     html += '<button class="modify" onclick=modifyEvent(' + event.id + ')>Modify</button>';
     html += '<button class="delete" onclick=deleteEvent(' + event.id + ')>Delete</button>';
@@ -111,7 +112,7 @@ function drawEventInnerHtml(date, event) {
     return html;
 }
 
-function drawEditEventInnerHtml(date, event) {
+function drawEditEventInnerHtml(date, source, event) {
     var html = '<td onclick=clickEvent(' + event.id + ')>' + date + '</td>';
     //var html = '<td onclick=clickEvent(' + event.id + ')>' + event.id + ' (' + event.event_set + ')</td>';
     var keys = ["entity1", "action", "entity2"];
@@ -119,6 +120,7 @@ function drawEditEventInnerHtml(date, event) {
         html += '<td><textarea>' + event[keys[key]] + '</textarea></td>';
     }
     html += '<td onclick=clickEvent(' + event.id + ')>' + event['sentence'] + '</td>';
+    html += '<td onclick=clickEvent(' + event.id + ')>' + '<a href="' + source + '">' + source + '</a>' + '</td>';
     html += '<td class="buttons">';
     html += '<button class="save" onclick=saveEvent(' + event.id + ')>Save</button>';
     html += '<button class="cancel" onclick=cancelEvent(' + event.id + ')>Cancel</button>';
@@ -131,7 +133,7 @@ function loadEvents() {
             var table = document.getElementById("events");
             var events = data.result;
             for (var index in events) {
-                table.innerHTML += drawEvent(events[index][0], events[index][1]);
+                table.innerHTML += drawEvent(events[index][0], events[index][1], events[index][2]);
             }
         });
 }
