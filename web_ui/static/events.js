@@ -97,14 +97,50 @@ function drawEvent(date, source, event) {
     return '<tr id=' + event.id + '>' + drawEventInnerHtml(date, source, event) + '</tr>';
 }
 
+function getSentence(event) {
+    var words = (event["sentence"] + " ").replace(/, /g, " , ").replace(/\. /g, " . ").split(" ");
+
+    var colors = ["red", "green", "blue"];
+    var keys = ["entity1", "action", "entity2"];
+    var data = [[]];
+    for (var key in keys) {
+        data[key] = event[keys[key]].split(" ");
+    }
+
+    for (var key in keys) {
+        for (var i in data[key]) {
+            for (var word in words) {
+                if (words[word] == data[key][i]) {
+                    words[word] = '<span class="' + colors[key] +'">' + words[word] + '</span>';
+                    break;
+                }
+            }
+        }
+    }
+
+    var result = "";
+    for (var i in words) {
+        if (words[i] == "") {
+            continue;
+        }
+        if (i != 0 && words[i] != ',' && words[i] != '.') {
+            result += " ";
+        }
+        result += words[i];
+    }
+    return result;
+}
+
 function drawEventInnerHtml(date, source, event) {
     var html = '<td onclick=clickEvent(' + event.id + ')>' + date + '</td>';
     //var html = '<td onclick=clickEvent(' + event.id + ')>' + event.id + ' (' + event.event_set + ')</td>';
-    var keys = ["entity1", "action", "entity2", "sentence"];
+    event.source = source;
+    var keys = ["entity1", "action", "entity2", "source"];
     for (key in keys) {
         html += '<td onclick=clickEvent(' + event.id + ')>' + event[keys[key]] + '</td>';
     }
-    html += '<td onclick=clickEvent(' + event.id + ')>' + '<a href="' + source + '">' + source + '</a>' + '</td>';
+    html += '<td onclick=clickEvent(' + event.id + ')>' + getSentence(event) + '</td>';
+
     html += '<td class="buttons">';
     html += '<button class="modify" onclick=modifyEvent(' + event.id + ')>Modify</button>';
     html += '<button class="delete" onclick=deleteEvent(' + event.id + ')>Delete</button>';
@@ -115,7 +151,8 @@ function drawEventInnerHtml(date, source, event) {
 function drawEditEventInnerHtml(date, source, event) {
     var html = '<td onclick=clickEvent(' + event.id + ')>' + date + '</td>';
     //var html = '<td onclick=clickEvent(' + event.id + ')>' + event.id + ' (' + event.event_set + ')</td>';
-    var keys = ["entity1", "action", "entity2"];
+    event.source = source;
+    var keys = ["entity1", "action", "entity2", "source"];
     for (var key in keys) {
         html += '<td><textarea>' + event[keys[key]] + '</textarea></td>';
     }

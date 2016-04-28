@@ -137,7 +137,12 @@ class DatabaseHandler:
 
         events = []
         for raw_event in self.cursor.fetchall():
-            events.append(Event(raw_event[1], raw_event[2], raw_event[3], raw_event[4], raw_event[5], id=raw_event[0]))
+            events.append(Event(self.process_string(raw_event[1]),
+                                self.process_string(raw_event[2]),
+                                self.process_string(raw_event[3]),
+                                self.process_string(raw_event[4]),
+                                raw_event[5],
+                                id=raw_event[0]))
         return events
 
     def get_sites(self):
@@ -157,7 +162,12 @@ class DatabaseHandler:
         INNER JOIN dates date ON date.id = event.date
         WHERE event.id=%s""", (event_id,))
         raw_event = self.cursor.fetchone()
-        return Event(raw_event[1], raw_event[2], raw_event[3], raw_event[4], raw_event[5], id=raw_event[0])
+        return Event(self.process_string(raw_event[1]),
+                     self.process_string(raw_event[2]),
+                     self.process_string(raw_event[3]),
+                     self.process_string(raw_event[4]),
+                     raw_event[5],
+                     id=raw_event[0])
 
     def get_event_publish_date(self, event_id):
         self.cursor.execute("""SELECT article.publish_date FROM events event
@@ -250,3 +260,11 @@ class DatabaseHandler:
 
     def del_action_from_set(self, event_id):
         self.del_from_set("actions_sets", event_id)
+
+    #TODO: fix it
+    def process_string(self, text):
+        text = ' '.join(text.split())
+        text = text.replace(" ’s", "’s")
+        text = text.replace("'ll", "will")
+        text = text.replace("'ve", "have")
+        return text
