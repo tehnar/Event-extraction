@@ -30,7 +30,20 @@ class SpacyEventExtractor:
             lambda tok: tok is token or tok.dep_.endswith("mod") or tok.dep_ == "compound"))), token
 
     @staticmethod
-    def get_prep_with_word(token):
+    def _have_pronouns(text):
+        return len(set(map(lambda s: s.lower(), text.split())) & {'i', 'we', 'you', 'he', 'she', 'they'}) != 0
+
+    @staticmethod
+    def _is_present_simple(verb):
+        for child in verb.children:
+            if child.dep_ == "aux":
+                return False  # will have etc
+        if verb.orth_ in [verb.lemma_, verb.lemma_ + 's', 'have', 'has']:
+            return True
+        return False
+
+    @staticmethod
+    def _get_prep_with_word(token):
         prep = None
         for child in token.rights:
             if child.dep_ == "prep":
@@ -40,7 +53,7 @@ class SpacyEventExtractor:
             return "", None
 
         for word in prep.children:
-            if word.dep_ == "pobj":
+            if word.dep_ in ["pobj", "pcomp"]:
                 chunk_str, chunk_head = SpacyEventExtractor._get_chunk(word)
                 return str(prep) + chunk_str, chunk_head
 
@@ -48,6 +61,7 @@ class SpacyEventExtractor:
 
     @staticmethod
     def extract(text):
+        text = ' '.join(text.split())  # remove any extra whitespaces
         events = []
         text = text.strip()
         if len(text) == 0:
@@ -92,17 +106,24 @@ class SpacyEventExtractor:
             entity2_string, entity2 = SpacyEventExtractor._get_chunk(entity2)
             entities = []
             for entity, entity_string in [(entity1, entity1_string), (entity2, entity2_string)]:
-                entity = SpacyEventExtractor.get_prep_with_word(entity)
+                entity = SpacyEventExtractor._get_prep_with_word(entity)
                 while entity[1] is not None:
                     entity_string += entity[0]
-                    entity = SpacyEventExtractor.get_prep_with_word(entity[1])
+                    entity = SpacyEventExtractor._get_prep_with_word(entity[1])
                 entities.append(entity_string)
             entity1_string, entity2_string = entities
             keywords_set = set(SpacyEventExtractor._keywords)
             if len(set([word.strip().lower() for word in entity1_string.split()]) & keywords_set) + \
                     len(set(word.strip().lower() for word in entity2_string.split()) & keywords_set) == 0:
                 continue  # there is no keywords in token and subj_string
+
+            if SpacyEventExtractor._have_pronouns(entity1_string) or SpacyEventExtractor._have_pronouns(entity2_string):
+                continue
+
+            if SpacyEventExtractor._is_present_simple(verb):
+                sentence = '<span style="background-color: red;">' + sentence + '</span>'
             events.append(Event(str(entity1_string), str(entity2_string), str(aux_verbs) + str(verb), str(sentence)))
+
             print(sentence)
             print('Object: ', entity1_string)
             print('Action: ', str(aux_verbs) + str(verb))
@@ -113,18 +134,18 @@ class SpacyEventExtractor:
 
 
 def main():
-    #for sent in open('samples.txt', 'r').readlines():
+    #for sent in open('samples.txt', 'r').read  lines():
     #    SpacyEventExtractor.extract(sent)
     #exit()
     db_handler = DatabaseHandler()
     db_handler.clear_db()
     for downloader in ArticleDownloader.downloaders:
         try:
-            for article in islice(downloader.get_articles(), 0, 400):
+            for article in islice(downloader.get_articles(), 0, 800):
                 events = SpacyEventExtractor.extract(article.summary)
                 events += SpacyEventExtractor.extract(article.text)
                 if db_handler.get_article_id(article) is not None:
-                    break
+                    continue
                 for event in events:
                     print(db_handler.add_event_or_get_id(event, article))
         except:
