@@ -34,7 +34,7 @@ def load_events():
     session["start_index"] = session["current_index"]
     session["current_index"] += DEFAULT_ARTICLES_COUNT
     events = db_handler.get_events_starting_from(session["current_index"], datetime.datetime.now())
-    return jsonify(result=[(db_handler.get_event_publish_date(e.id), db_handler.get_event_source(e.id), e.json()) for e in
+    return jsonify(result=[(db_handler.get_event_publish_date(e.id), db_handler.get_event_source(e.id).url, e.json()) for e in
                            events[session["start_index"]: session["current_index"]]])
 
 
@@ -49,7 +49,7 @@ def delete_event_by_id():
 def get_event_by_id():
     id = request.form.get('id', 0, type=int)
     event = db_handler.get_event_by_id(id)
-    return jsonify(result=(db_handler.get_event_publish_date(event.id), event.json()))
+    return jsonify(result=(db_handler.get_event_publish_date(event.id), db_handler.get_event_source(id).url, event.json()))
 
 
 @app.route('/_join_events', methods=['POST'])

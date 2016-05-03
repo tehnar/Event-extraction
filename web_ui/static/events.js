@@ -93,8 +93,41 @@ function saveEvent(id) {
         });
 }
 
+function hideRow(id) {
+    $('tr#' + id + '.even').toggle();
+    var row = $('tbody#' + id);
+    row.off("mouseleave").mouseleave(function() {});
+    row.off("mouseenter").mouseenter(function() {
+        mouseOver(id);
+    });
+}
+
+function expandRow(id) {
+    var row = $('tbody#' + id);
+    row.mouseleave();
+    row.off("mouseenter").mouseenter(function(){});
+    row.off("mouseleave").mouseleave(function() {
+        hideRow(id);
+    });
+    $('tr#' + id + '.even').toggle();
+}
+
+function mouseOver(id) {
+    console.log(id);
+    var row = $('tbody#' + id);
+    row.mouseleave();
+    timeout = setTimeout(function() {
+        expandRow(id);
+    }, 1000);
+
+    row.off("mouseleave").mouseleave(function() {
+        clearTimeout(timeout);
+    });
+}
+
 function drawEvent(date, source, event) {
-    return '<tr id=' + event.id + '>' + drawEventInnerHtml(date, source, event) + '</tr>';
+    return '<tbody id=' + event.id + ' onmouseenter=mouseOver(' + event.id + ')> <tr id=' + event.id + '>' + drawEventInnerHtml(date, source, event) + '</tr>' + 
+        '<tr id=' + event.id + ' class=even style=display:none> <td colspan="7"> KEK </td> </tr> </tbody>';
 }
 
 function getSentence(event) {
@@ -132,14 +165,14 @@ function getSentence(event) {
 }
 
 function drawEventInnerHtml(date, source, event) {
-    var html = '<td onclick=clickEvent(' + event.id + ')>' + date + '</td>';
+    var html = '<td ondblclick=clickEvent(' + event.id + ')>' + date + '</td>';
     //var html = '<td onclick=clickEvent(' + event.id + ')>' + event.id + ' (' + event.event_set + ')</td>';
-    event.source = source;
-    var keys = ["entity1", "action", "entity2", "source"];
+    var keys = ["entity1", "action", "entity2"];
     for (key in keys) {
-        html += '<td onclick=clickEvent(' + event.id + ')>' + event[keys[key]] + '</td>';
+        html += '<td ondblclick=clickEvent(' + event.id + ')>' + event[keys[key]] + '</td>';
     }
-    html += '<td onclick=clickEvent(' + event.id + ')>' + getSentence(event) + '</td>';
+    html += '<td ondblclick=clickEvent(' + event.id + ')>' + getSentence(event) + '</td>';
+    html += '<td ondblclick=clickEvent(' + event.id + ')>' + '<a href="' + source + '">' + source + '</a>' + '</td>';
 
     html += '<td class="buttons">';
     html += '<button class="modify" onclick=modifyEvent(' + event.id + ')>Modify</button>';
@@ -149,15 +182,14 @@ function drawEventInnerHtml(date, source, event) {
 }
 
 function drawEditEventInnerHtml(date, source, event) {
-    var html = '<td onclick=clickEvent(' + event.id + ')>' + date + '</td>';
+    var html = '<td ondblclick=clickEvent(' + event.id + ')>' + date + '</td>';
     //var html = '<td onclick=clickEvent(' + event.id + ')>' + event.id + ' (' + event.event_set + ')</td>';
-    event.source = source;
-    var keys = ["entity1", "action", "entity2", "source"];
+    var keys = ["entity1", "action", "entity2"];
     for (var key in keys) {
         html += '<td><textarea>' + event[keys[key]] + '</textarea></td>';
     }
-    html += '<td onclick=clickEvent(' + event.id + ')>' + event['sentence'] + '</td>';
-    html += '<td onclick=clickEvent(' + event.id + ')>' + '<a href="' + source + '">' + source + '</a>' + '</td>';
+    html += '<td ondblclick=clickEvent(' + event.id + ')>' + event['sentence'] + '</td>';
+    html += '<td ondblclick=clickEvent(' + event.id + ')>' + '<a href="' + source + '">' + source + '</a>' + '</td>';
     html += '<td class="buttons">';
     html += '<button class="save" onclick=saveEvent(' + event.id + ')>Save</button>';
     html += '<button class="cancel" onclick=cancelEvent(' + event.id + ')>Cancel</button>';
