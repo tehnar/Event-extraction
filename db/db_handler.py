@@ -268,11 +268,15 @@ class DatabaseHandler:
         return self.get_set_by_id("actions_sets", action_id)
 
     def join_actions_by_events(self, ids):
-        actions_ids = []
+        actions = []
         for id in ids:
             self.cursor.execute("""SELECT action FROM events WHERE id=%s""", (id,))
-            actions_ids.append(self.cursor.fetchone()[0])
-        self.join("actions_sets", actions_ids)
+            action_id = self.cursor.fetchone()[0]
+            action = self.get_action_by_id(action_id)
+            actions.append((action_id, action))
+            
+        self.join("actions_sets", min(actions, key=lambda pair: len(pair[1]))[0],
+                  list(map(lambda pair: pair[0], actions)))
 
     def del_action_from_set(self, event_id):
         self.del_from_set("actions_sets", event_id)
