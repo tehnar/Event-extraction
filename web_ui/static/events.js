@@ -50,11 +50,10 @@ function clickEvent(id) {
     var index = find(selected_events, id);
     if (index != -1) {
         remove(selected_events, index);
-        document.getElementById(id).setAttribute("class", "");
     } else {
         selected_events.push(id);
-        document.getElementById(id).setAttribute("class", "selected");
     }
+    $('tr#' + id + '.odd').toggleClass("selected");
 }
 
 function joinEvents() {
@@ -126,7 +125,7 @@ function mouseOver(id) {
 }
 
 function drawEvent(date, source, event) {
-    return '<tbody id=' + event.id + ' onmouseenter=mouseOver(' + event.id + ')> <tr id=' + event.id + '>' + drawEventInnerHtml(date, source, event) + '</tr>' + 
+    return '<tbody id=' + event.id + ' onmouseenter=mouseOver(' + event.id + ')> <tr class=odd id=' + event.id + '>' + drawEventInnerHtml(date, source, event) + '</tr>' + 
         '<tr id=' + event.id + ' class=even style=display:none> <td colspan="7"> KEK </td> </tr> </tbody>';
 }
 
