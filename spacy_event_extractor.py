@@ -1,7 +1,9 @@
-from db.db_handler import DatabaseHandler
 from itertools import *
-from data_mining import ArticleDownloader
+
 from spacy.en import English
+
+from data_mining import article_downloaders, Article
+from db.db_handler import DatabaseHandler
 from event import Event
 
 
@@ -26,21 +28,31 @@ class SpacyEventExtractor:
 
     @staticmethod
     def _get_chunk(token):
+        if token is None:
+            return "", None
         return " ".join(map(str, SpacyEventExtractor._get_tree(token, 2,
             lambda tok: tok is token or tok.dep_.endswith("mod") or tok.dep_ == "compound"))), token
 
     @staticmethod
     def _have_pronouns(text):
-        return len(set(map(lambda s: s.lower(), text.split())) & {'i', 'we', 'you', 'he', 'she', 'they'}) != 0
+        pronouns = ['i', 'we', 'you', 'he', 'she', 'they', 'be', 'him', 'her']
+        return list(filter(lambda s: s.lower() in pronouns, str(text).split())) != []
 
     @staticmethod
     def _is_present_simple(verb):
         for child in verb.children:
-            if child.dep_ == "aux":
+            if child.orth_ == 'will':
                 return False  # will have etc
-        if verb.orth_ in [verb.lemma_, verb.lemma_ + 's', 'have', 'has']:
+        if verb.orth_ in [verb.lemma_, verb.lemma_ + 's', 'have', 'has', 'do']:
             return True
         return False
+
+    @staticmethod
+    def _is_present_continuous(verb):
+        for child in verb.children:
+            if child.dep_ == 'aux' and child.lemma_ not in ['be', 'is', 'are', 'am']:
+                return False  # will have etc
+        return verb.orth_.endswith('ing')
 
     @staticmethod
     def _get_prep_with_word(token):
@@ -99,6 +111,7 @@ class SpacyEventExtractor:
                 if child.dep_ == "dobj":
                     entity2 = child
                     break
+
             if entity2 is None:
                 continue
 
@@ -120,10 +133,10 @@ class SpacyEventExtractor:
             if SpacyEventExtractor._have_pronouns(entity1_string) or SpacyEventExtractor._have_pronouns(entity2_string):
                 continue
 
-            if SpacyEventExtractor._is_present_simple(verb):
-                sentence = '<span style="background-color: red;">' + sentence + '</span>'
-            events.append(Event(str(entity1_string), str(entity2_string), str(aux_verbs) + str(verb), str(sentence)))
+            if SpacyEventExtractor._is_present_simple(verb) or SpacyEventExtractor._is_present_continuous(verb):
+                continue
 
+            events.append(Event(str(entity1_string), str(entity2_string), str(aux_verbs) + str(verb), str(sentence)))
             print(sentence)
             print('Object: ', entity1_string)
             print('Action: ', str(aux_verbs) + str(verb))
@@ -134,20 +147,26 @@ class SpacyEventExtractor:
 
 
 def main():
+    db_handler = DatabaseHandler()
+
     #for sent in open('samples.txt', 'r').read  lines():
     #    SpacyEventExtractor.extract(sent)
     #exit()
-    db_handler = DatabaseHandler()
-    db_handler.clear_db()
-    for downloader in ArticleDownloader.downloaders:
+
+    #db_handler.clear_db()
+
+    for downloader in article_downloaders:
+        cnt = 1
         try:
-            for article in islice(downloader.get_articles(), 0, 800):
+            for article in islice(downloader.get_articles(), 0, 1600):
                 events = SpacyEventExtractor.extract(article.summary)
                 events += SpacyEventExtractor.extract(article.text)
                 if db_handler.get_article_id(article) is not None:
                     continue
                 for event in events:
-                    print(db_handler.add_event_or_get_id(event, article))
+                    print(db_handler.add_event_or_get_id(event, article), article.url)
+                print(cnt)
+                cnt += 1
         except:
             import traceback
             print(traceback.format_exc())
