@@ -198,7 +198,7 @@ class DatabaseHandler:
 
     #TODO: check 'del_action' and 'del_entity' (add set update)
 
-    def get_set_for_event_by_id(self, table, event_id):
+    def get_set_by_id(self, table, event_id):
         self.cursor.execute("""SELECT parent_id FROM """ + table + """ WHERE child_id=%s""", (event_id,))
         result = self.cursor.fetchone()
         if result is None:
@@ -211,8 +211,8 @@ class DatabaseHandler:
                 self.join_two(table, id, root_id)
 
     def join_two(self, table, event1_id, event2_id):
-        event1_id = self.get_set_for_event_by_id(table, event1_id)
-        event2_id = self.get_set_for_event_by_id(table, event2_id)
+        event1_id = self.get_set_by_id(table, event1_id)
+        event2_id = self.get_set_by_id(table, event2_id)
 
         if event1_id != event2_id:
             self.cursor.execute("""INSERT INTO """ + table + """ (child_id, parent_id) VALUES (%s, %s) """, (event1_id, event2_id))
@@ -239,7 +239,7 @@ class DatabaseHandler:
             self.connection.commit()
 
     def get_event_set_for_event_by_id(self, event_id):
-        return self.get_set_for_event_by_id("events_sets", event_id)
+        return self.get_set_by_id("events_sets", event_id)
 
     def join_events(self, ids):
         self.join("events_sets", ids[0], ids)
@@ -247,8 +247,8 @@ class DatabaseHandler:
     def del_event_from_set(self, event_id):
         self.del_from_set("events_sets", event_id)
 
-    def get_entity_set_for_event_by_id(self, event_id):
-        return self.get_set_for_event_by_id("entities_sets", event_id)
+    def get_entity_set_by_entity_id(self, entity_id):
+        return self.get_set_by_id("entities_sets", entity_id)
 
     def join_entities_by_events(self, ids, mod):
         entities = []
@@ -264,8 +264,8 @@ class DatabaseHandler:
     def del_entity_from_set(self, event_id):
         self.del_from_set("entities_sets", event_id)
 
-    def get_action_set_for_event_by_id(self, event_id):
-        return self.get_set_for_event_by_id("actions_sets", event_id)
+    def get_action_set_by_action_id(self, action_id):
+        return self.get_set_by_id("actions_sets", action_id)
 
     def join_actions_by_events(self, ids):
         actions_ids = []
@@ -292,4 +292,9 @@ class DatabaseHandler:
     def get_action_by_id(self, id):
         self.cursor.execute("SELECT action_name FROM actions WHERE id=%s", (id,))
         return self.cursor.fetchone()[0]
+
+    def get_entity_core_id_by_event_id(self, id):
+        self.cursor.execute("SELECT entity1, action, entity2 FROM events WHERE id=%s", (id,))
+        event_data = self.cursor.fetchone()
+        return event_data[0], event_data[1], event_data[2]
 
