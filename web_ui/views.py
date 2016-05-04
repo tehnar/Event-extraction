@@ -79,6 +79,17 @@ def check_phrase(phrase, sentence):
             return False
     return True
 
+def are_same(event1, event2):
+    action_id_1 = db_handler.get_action_set_for_event_by_id(event1.id)
+    action_id_2 = db_handler.get_action_set_for_event_by_id(event2.id)
+    return False
+
+def auto_merging(events):
+    events_count = len(events)
+    for i1 in range(0, events_count):
+        for i2 in range(i1 + 1, events_count):
+            if are_same(events[i1], events[i2]):
+                db_handler.join_events([events[i1], events[i2]])
 
 @app.route('/_modify_event', methods=['POST'])
 def modify_event_by_id():
