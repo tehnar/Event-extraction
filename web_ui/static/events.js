@@ -30,19 +30,20 @@ loadEvents();
 
 function modifyEvent(id) {
     $.post($SCRIPT_ROOT + '/_get_event', {id: id}, function(data) {
-        document.getElementById(id).innerHTML= drawEditEventInnerHtml(data.result[0], data.result[1], data.result[2]);
+        $('tr#' + id + '.odd').html(drawEditEventInnerHtml(data.result[0], data.result[1], data.result[2]));
     });
 }
 
 function deleteEvent(id) {
     removeElement(selected_events, id);
-    document.getElementById(id).remove();
+    $('tbody#' + id).remove();
+    //$('tr#' + id + '.even').remove();
     $.post($SCRIPT_ROOT + '/_delete_event', {id: id}, function(data) {});
 }
 
 function cancelEvent(id) {
     $.post($SCRIPT_ROOT + '/_get_event', {id: id}, function(data) {
-        document.getElementById(id).innerHTML = drawEventInnerHtml(data.result[0], data.result[1], data.result[2]);
+        $('tr#' + id + '.odd').html(drawEventInnerHtml(data.result[0], data.result[1], data.result[2]));
     });
 }
 
@@ -75,17 +76,19 @@ function joinEvents() {
 }
 
 function saveEvent(id) {
-    var event = document.getElementById(id);
-    var entity1 = event.childNodes.item(1).firstChild.value;
-    var action = event.childNodes.item(2).firstChild.value;
-    var entity2 = event.childNodes.item(3).firstChild.value;
+    //var event = document.getElementById(id);
+    var event = $('tr#' + id + '.odd');
+    var children = event.children();
+    var entity1 = children[1].firstChild.value;
+    var action = children[2].firstChild.value;
+    var entity2 = children[3].firstChild.value;
     //var sentence = event.childNodes.item(4).firstChild.value;
 
     $.post($SCRIPT_ROOT + '/_modify_event',
         {id: id, entity1: entity1, action: action, entity2: entity2},
         function(data) {
             if (data.error == null) {
-                event.innerHTML = drawEventInnerHtml(data.result[0], data.result[1], data.result[2]);
+                event.html(drawEventInnerHtml(data.result[0], data.result[1], data.result[2]));
             } else {
                 alert(data.error)
             }
@@ -112,7 +115,6 @@ function expandRow(id) {
 }
 
 function mouseOver(id) {
-    console.log(id);
     var row = $('tbody#' + id);
     row.mouseleave();
     timeout = setTimeout(function() {

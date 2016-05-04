@@ -136,7 +136,7 @@ def modify_event_by_id():
     db_handler.change_event(event_id, Event(entity1, entity2, action, sentence, None))
 
     event = db_handler.get_event_by_id(event_id)
-    return jsonify(result=(db_handler.get_event_publish_date(event.id), event.json()), error=None)
+    return jsonify(result=(db_handler.get_event_publish_date(event.id), db_handler.get_event_source(event_id).url, event.json()), error=None)
 
 
 @app.route('/events', methods = ['GET', 'POST'])
