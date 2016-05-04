@@ -5,10 +5,15 @@ from wtforms import IntegerField, DateField, SubmitField, TextAreaField
 from db import DatabaseHandler
 from event import Event
 import datetime
+import editdistance
+import numpy
+import threading
+
 
 DEFAULT_ARTICLES_COUNT = 10
 db_handler = DatabaseHandler()
 
+MERGE_PROGRESS = 0
 
 class EventsForm(Form):
     selected_event_id = -1
@@ -44,13 +49,24 @@ def delete_event_by_id():
     db_handler.del_event_by_id(id)
     return jsonify(result=None)
 
+def thread_full_auto_merge():
+    auto_merge(db_handler.get_event_ids())
+
+@app.route('/_full_auto_merge', methods=['POST'])
+def full_auto_merge():
+    t1 = threading.Thread(target=thread_full_auto_merge)
+    t1.start()
+    return jsonify(result=None)
+
+@app.route('/_get_merge_progress', methods=['POST'])
+def get_merge_progress():
+    return jsonify(result=MERGE_PROGRESS)
 
 @app.route('/_get_event', methods=['POST'])
 def get_event_by_id():
     id = request.form.get('id', 0, type=int)
     event = db_handler.get_event_by_id(id)
     return jsonify(result=(db_handler.get_event_publish_date(event.id), db_handler.get_event_source(id).url, event.json()))
-
 
 @app.route('/_join_events', methods=['POST'])
 def join_events():
@@ -70,7 +86,7 @@ def join_events():
     if join_entities2:
         db_handler.join_entities_by_events(ids, "2")
 
-    return jsonify(result=None)
+    return jsonify(result=MERGE_PROGRESS)
 
 
 def check_phrase(phrase, sentence):
@@ -80,35 +96,55 @@ def check_phrase(phrase, sentence):
     return True
 
 def are_same_sentences(text1, text2):
-    return False
+    return 100 * editdistance.eval(text1, text2) / numpy.average([len(text1), len(text2)])
 
 def are_same(id1, id2):
     entity11_id, action1_id, entity12_id = db_handler.get_entity_core_id_by_event_id(id1)
     entity21_id, action2_id, entity22_id = db_handler.get_entity_core_id_by_event_id(id2)
 
     entity11_id = db_handler.get_entity_set_by_entity_id(entity11_id)
-    action1_id = db_handler.get_action_set_by_action_id(action1_id)
-
     entity21_id = db_handler.get_entity_set_by_entity_id(entity21_id)
-    action2_id = db_handler.get_action_set_by_action_id(action2_id)
 
     if entity11_id != entity21_id:
         return False
+
+
+    action1_id = db_handler.get_action_set_by_action_id(action1_id)
+    action2_id = db_handler.get_action_set_by_action_id(action2_id)
 
     if action1_id != action2_id:
         return False
 
     # cmp sentences
-    print("Same events: " + str(id1) + " " + str(id2))
+    text_delta = are_same_sentences(db_handler.get_entity_by_id(entity12_id), db_handler.get_entity_by_id(entity22_id))
+    if text_delta > 50:
+        return False
 
-    return False
+    print("Same events: " + str(id1) + " " + str(id2) + "(" + str(text_delta) + ")")
+    print(db_handler.get_entity_by_id(entity11_id), db_handler.get_action_by_id(action1_id), db_handler.get_entity_by_id(entity12_id))
+    print(db_handler.get_entity_by_id(entity21_id), db_handler.get_action_by_id(action2_id), db_handler.get_entity_by_id(entity22_id))
 
-def auto_merging(event_ids):
-    events_count = len(event_ids)
+    return True
+
+def auto_merge(event_ids):
+    global MERGE_PROGRESS
+
+    #TODO: uncomment
+    events_count = 200 #len(event_ids)
+
+    MERGE_PROGRESS = 0
+    total_count = (events_count * (events_count - 1)) / 2
+    count = 0
+
     for i1 in range(0, events_count):
         for i2 in range(i1 + 1, events_count):
             if are_same(event_ids[i1], event_ids[i2]):
-                db_handler.join_events([event_ids[i1], event_ids[i2]])
+                #TODO: change handler
+                #db_handler.join_events([event_ids[i1], event_ids[i2]])
+                pass
+
+            count += 1
+            MERGE_PROGRESS = 100 * count / total_count
 
 @app.route('/_modify_event', methods=['POST'])
 def modify_event_by_id():

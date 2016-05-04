@@ -302,3 +302,9 @@ class DatabaseHandler:
         event_data = self.cursor.fetchone()
         return event_data[0], event_data[1], event_data[2]
 
+    def get_event_ids(self):
+        self.cursor.execute("SELECT id FROM events")
+        ids = []
+        for id in self.cursor.fetchall():
+            ids.append(id[0])
+        return ids

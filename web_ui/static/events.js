@@ -26,6 +26,7 @@ function removeElement(array, e) {
 }
 
 var selected_events = [];
+var progressTime = null;
 loadEvents();
 
 function modifyEvent(id) {
@@ -73,6 +74,24 @@ function joinEvents() {
                 clickEvent(selected_events[0]);
         }
     });
+}
+
+function updateProgressBar() {
+    $.post($SCRIPT_ROOT + '/_get_merge_progress', {},
+        function (data) {
+            var progress = data.result;
+            document.getElementById("progress_bar").value = progress;
+            if (progress == 100) {
+                clearInterval(progressTimer);
+                progressTimer = null;
+                document.getElementById("progress_bar").value = 0;
+            }
+        });
+}
+
+function fullAutoMerge() {
+    progressTimer = setInterval(updateProgressBar, 1000);
+    $.post($SCRIPT_ROOT + '/_full_auto_merge', {}, function(data) {});
 }
 
 function saveEvent(id) {
@@ -128,7 +147,7 @@ function mouseOver(id) {
 
 function drawEvent(date, source, event) {
     return '<tbody id=' + event.id + ' onmouseenter=mouseOver(' + event.id + ')> <tr class=odd id=' + event.id + '>' + drawEventInnerHtml(date, source, event) + '</tr>' + 
-        '<tr id=' + event.id + ' class=even style=display:none> <td colspan="7"> KEK </td> </tr> </tbody>';
+        '<tr id=' + event.id + ' class=even style=display:none> <td colspan="7"> No same events! </td> </tr> </tbody>';
 }
 
 function getSentence(event) {
