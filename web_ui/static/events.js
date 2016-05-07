@@ -27,6 +27,8 @@ function removeElement(array, e) {
 
 var selected_events = [];
 var progressTime = null;
+
+updateMergingButton();
 loadEvents();
 
 function modifyEvent(id) {

@@ -1,4 +1,4 @@
-div.table {
+table.table {
     display:table;
     font-family: "Trebuchet MS", Arial, Helvetica, sans-serif;
     border-collapse: collapse;
@@ -38,7 +38,7 @@ tr:nth-child(even) {
     background-color: #FAFAFA;
 }
 
-tr:hover {
+table.table tr:hover {
     background-color: #E9FFE9;
 }
 
@@ -48,6 +48,7 @@ td.th {
     background-color: #4CAF50;
     color: white;
 }
+
 
 td.buttons {
     vertical-align: top;
@@ -203,4 +204,14 @@ progress {
     background: yellow;
     width: 100%;
     height: 3px;
+}
+
+span.block {
+    float: left;
+    display: inline;
+    width: 100%;
+    vertical-align: middle;
+    min-height: 50px;
+    margin-top: 10px;
+    padding: 0;
 }

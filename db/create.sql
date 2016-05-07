@@ -60,6 +60,7 @@ CREATE TABLE IF NOT EXISTS actions_sets (
 );
 
 CREATE TABLE IF NOT EXISTS events_merge (
-    id1 INTEGER REFERENCES events (id),
-    id2 INTEGER REFERENCES events (id)
+    id SERIAL PRIMARY KEY,
+    event1_id INTEGER REFERENCES events (id),
+    event2_id INTEGER REFERENCES events (id)
 );

@@ -310,12 +310,21 @@ class DatabaseHandler:
         return ids
 
     def add_events_to_events_merge(self, id1, id2):
-        self.cursor.execute("INSERT INTO events_merge (id1, id2) VALUES (%s, %s)", (id1, id2))
+        self.cursor.execute("INSERT INTO events_merge (event1_id, event2_id) VALUES (%s, %s)", (id1, id2))
         self.connection.commit()
 
     def get_events_merge(self):
-        self.cursor.execute("SELECT id1, id2 FROM events_merge")
-        pairs = []
-        for pair in self.cursor.fetchall():
-            pairs.append((pair[0], pair[1]))
-        return pairs
+        self.cursor.execute("SELECT id, event1_id, event2_id FROM events_merge")
+        data = []
+        for entry in self.cursor.fetchall():
+            data.append((entry[0], entry[1], entry[2]))
+        return data
+
+    def get_event_merge_by_id(self, id):
+        self.cursor.execute("SELECT event1_id, event2_id FROM events_merge WHERE id=%s", (id,))
+        data = self.cursor.fetchone()
+        return (data[0], data[1])
+
+    def del_event_merge_by_id(self, id):
+        self.cursor.execute("DELETE FROM events_merge WHERE id=%s", (id,))
+        self.connection.commit()

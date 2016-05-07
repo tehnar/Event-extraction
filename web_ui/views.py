@@ -39,15 +39,19 @@ def get_extended_event(id):
     event.url = db_handler.get_event_source(id).url
     return event
 
+@app.route('/_get_events_merge_count', methods=['POST'])
+def get_events_merge_count():
+    return jsonify(result=len(db_handler.get_events_merge()))
+
 @app.route('/_load_events_merge', methods=['POST'])
 def load_events_merge():
-    event_pairs = db_handler.get_events_merge()
+    events_merge = db_handler.get_events_merge()
 
     events = []
-    for pair in event_pairs:
-        events.append((get_extended_event(pair[0]), get_extended_event(pair[1])))
+    for entry in events_merge:
+        events.append((entry[0], get_extended_event(entry[1]), get_extended_event(entry[2])))
 
-    return jsonify(result=[(pair[0].json(), pair[1].json()) for pair in events])
+    return jsonify(result=[(entry[0], entry[1].json(), entry[2].json()) for entry in events])
 
 
 @app.route('/_load_events', methods=['POST'])
@@ -58,6 +62,12 @@ def load_events():
 
     return jsonify(result=[get_extended_event(e.id).json() for e in events[session["start_index"]: session["current_index"]]])
 
+
+@app.route('/_delete_events_merge', methods=['POST'])
+def delete_events_merge():
+    id = request.form.get('id', 0, type=int)
+    db_handler.del_event_merge_by_id(id)
+    return jsonify(result=None)
 
 @app.route('/_delete_event', methods=['POST'])
 def delete_event_by_id():
@@ -84,6 +94,29 @@ def get_event_by_id():
     id = request.form.get('id', 0, type=int)
     return jsonify(result=get_extended_event(id).json())
 
+@app.route('/_join_events_merge', methods=['POST'])
+def join_events_merge():
+    id = request.form.get('id', 0, type=int)
+    join_entities1 = request.form.get('joinEntities1', 0, type=bool)
+    join_actions = request.form.get('joinActions', 0, type=bool)
+    join_entities2 = request.form.get('joinEntities2', 0, type=bool)
+
+    ids = db_handler.get_event_merge_by_id(id)
+    db_handler.join_events(ids)
+
+    if join_entities1:
+        db_handler.join_entities_by_events(ids, "1")
+
+    if join_actions:
+        db_handler.join_actions_by_events(ids)
+
+    if join_entities2:
+        db_handler.join_entities_by_events(ids, "2")
+
+    db_handler.del_event_merge_by_id(id)
+
+    return jsonify(result=None)
+
 @app.route('/_join_events', methods=['POST'])
 def join_events():
     ids = request.form.getlist('ids[]')
@@ -102,7 +135,7 @@ def join_events():
     if join_entities2:
         db_handler.join_entities_by_events(ids, "2")
 
-    return jsonify(result=MERGE_PROGRESS)
+    return jsonify(result=None)
 
 
 def check_phrase(phrase, sentence):
