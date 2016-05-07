@@ -151,7 +151,7 @@ function drawEvent(date, source, event) {
 }
 
 function getSentence(event) {
-    var words = (event["sentence"] + " ").replace(/, /g, " , ").replace(/\. /g, " . ").split(" ");
+    var words = (event["sentence"]).replace(/[^\w\s]|_/g, function ($1) { return ' ' + $1 + ' ';}).split(/[ ]+/g);
 
     var colors = ["red", "green", "blue"];
     var keys = ["entity1", "action", "entity2"];
@@ -172,14 +172,14 @@ function getSentence(event) {
     }
 
     var result = "";
-    for (var i in words) {
-        if (words[i] == "") {
-            continue;
-        }
-        if (i != 0 && words[i] != ',' && words[i] != '.') {
+    var skipSpace = true;
+    for (var i = 0; i < words.length; ++i) {
+        if (!skipSpace && !(/^[\/.,'’”:;^!?%+)\]\}]/.test(words[i]))) {
             result += " ";
         }
         result += words[i];
+
+        skipSpace = /^[\/$'.’“(\[\{]/.test(words[i]);
     }
     return result;
 }

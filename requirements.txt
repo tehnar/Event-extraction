@@ -1,0 +1,9 @@
+flask>=0.10.1
+flask_bootstrap>=3.3.5.7
+flask-wtf>=0.12
+python-dateutil>=2.5.3
+requests>=2.10.0
+beautifulsoup4>=4.4.1
+editdistance>=0.3.1
+numpy>=1.11
+spacy>=0.100.6
