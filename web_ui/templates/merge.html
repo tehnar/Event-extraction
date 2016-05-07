@@ -9,17 +9,12 @@
 </script>
 
 <script src="{{ url_for('static', filename='drawing.js') }}"></script>
-<script src="{{ url_for('static', filename='events.js') }}"></script>
+<script src="{{ url_for('static', filename='merge.js') }}"></script>
+
 
 {% extends "base.html" %}
 {% block content %}
-
 </html>
-    <ul class="tool_bar">
-        <li><a href="#" onclick=joinEvents()>Join events</a></li>
-        <li><a href="#" onclick=fullAutoMerge()>Full AutoMerge</a></li>
-    </ul>
-    <progress id="progress_bar" value="0" max="100"></progress>
     <table class="table" id="events">
         <tr>
             <td class="th"> Date </td>

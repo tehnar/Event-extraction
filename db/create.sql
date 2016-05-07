@@ -58,3 +58,8 @@ CREATE TABLE IF NOT EXISTS actions_sets (
     child_id INTEGER REFERENCES actions (id),
     parent_id INTEGER REFERENCES actions (id)
 );
+
+CREATE TABLE IF NOT EXISTS events_merge (
+    id1 INTEGER REFERENCES events (id),
+    id2 INTEGER REFERENCES events (id)
+);

@@ -1,7 +1,7 @@
 from flask import session, redirect, url_for, render_template, request, jsonify
 from web_ui import app
 from flask.ext.wtf import Form
-from wtforms import IntegerField, DateField, SubmitField, TextAreaField
+from wtforms import SubmitField, TextAreaField
 from db import DatabaseHandler
 from event import Event
 import datetime
@@ -33,14 +33,30 @@ class FetchArticleForm(Form):
 def redirect_to_events():
     return redirect(url_for('events'))
 
+def get_extended_event(id):
+    event = db_handler.get_event_by_id(id)
+    event.pdate = db_handler.get_event_publish_date(id)
+    event.url = db_handler.get_event_source(id).url
+    return event
+
+@app.route('/_load_events_merge', methods=['POST'])
+def load_events_merge():
+    event_pairs = db_handler.get_events_merge()
+
+    events = []
+    for pair in event_pairs:
+        events.append((get_extended_event(pair[0]), get_extended_event(pair[1])))
+
+    return jsonify(result=[(pair[0].json(), pair[1].json()) for pair in events])
+
 
 @app.route('/_load_events', methods=['POST'])
 def load_events():
     session["start_index"] = session["current_index"]
     session["current_index"] += DEFAULT_ARTICLES_COUNT
     events = db_handler.get_events_starting_from(session["current_index"], datetime.datetime.now())
-    return jsonify(result=[(db_handler.get_event_publish_date(e.id), db_handler.get_event_source(e.id).url, e.json()) for e in
-                           events[session["start_index"]: session["current_index"]]])
+
+    return jsonify(result=[get_extended_event(e.id).json() for e in events[session["start_index"]: session["current_index"]]])
 
 
 @app.route('/_delete_event', methods=['POST'])
@@ -52,6 +68,7 @@ def delete_event_by_id():
 def thread_full_auto_merge():
     auto_merge(db_handler.get_event_ids())
 
+#TODO: remove
 @app.route('/_full_auto_merge', methods=['POST'])
 def full_auto_merge():
     t1 = threading.Thread(target=thread_full_auto_merge)
@@ -65,8 +82,7 @@ def get_merge_progress():
 @app.route('/_get_event', methods=['POST'])
 def get_event_by_id():
     id = request.form.get('id', 0, type=int)
-    event = db_handler.get_event_by_id(id)
-    return jsonify(result=(db_handler.get_event_publish_date(event.id), db_handler.get_event_source(id).url, event.json()))
+    return jsonify(result=get_extended_event(id).json())
 
 @app.route('/_join_events', methods=['POST'])
 def join_events():
@@ -129,8 +145,7 @@ def are_same(id1, id2):
 def auto_merge(event_ids):
     global MERGE_PROGRESS
 
-    #TODO: uncomment
-    events_count = 200 #len(event_ids)
+    events_count = len(event_ids)
 
     MERGE_PROGRESS = 0
     total_count = (events_count * (events_count - 1)) / 2
@@ -140,8 +155,7 @@ def auto_merge(event_ids):
         for i2 in range(i1 + 1, events_count):
             if are_same(event_ids[i1], event_ids[i2]):
                 #TODO: change handler
-                #db_handler.join_events([event_ids[i1], event_ids[i2]])
-                pass
+                db_handler.add_events_to_events_merge(event_ids[i1], event_ids[i2])
 
             count += 1
             MERGE_PROGRESS = 100 * count / total_count
@@ -159,7 +173,6 @@ def modify_event_by_id():
     action = ' '.join(action.split())
     entity2 = ' '.join(entity2.split())
 
-    #sentence = request.args.get('sentence', 0, type=str)
     sentence = db_handler.get_event_by_id(event_id).sentence
 
     if not check_phrase(entity1, sentence):
@@ -171,15 +184,14 @@ def modify_event_by_id():
 
     db_handler.change_event(event_id, Event(entity1, entity2, action, sentence, None))
 
-    event = db_handler.get_event_by_id(event_id)
-    return jsonify(result=(db_handler.get_event_publish_date(event.id), db_handler.get_event_source(event_id).url, event.json()), error=None)
+    return jsonify(result=get_extended_event(event_id).json(), error=None)
 
 
 @app.route('/events', methods = ['GET', 'POST'])
 def events():
     form = EventsForm()
     session["start_index"] = session["current_index"] = 0
-    return render_template("events.html", form = form)
+    return render_template("events.html", form=form)
 
 
 @app.route('/sources', methods = ['GET', 'POST'])
@@ -193,7 +205,7 @@ def articles():
     return render_template("sources.html", articles=zip(articles, articles_forms))
 
 
-@app.route('/statistics', methods=['GET', 'POST'])
+@app.route('/merge', methods=['GET', 'POST'])
 def statistics():
-    return render_template("statistics.html", form=Form())
+    return render_template("merge.html", form=Form())
 

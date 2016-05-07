@@ -308,3 +308,14 @@ class DatabaseHandler:
         for id in self.cursor.fetchall():
             ids.append(id[0])
         return ids
+
+    def add_events_to_events_merge(self, id1, id2):
+        self.cursor.execute("INSERT INTO events_merge (id1, id2) VALUES (%s, %s)", (id1, id2))
+        self.connection.commit()
+
+    def get_events_merge(self):
+        self.cursor.execute("SELECT id1, id2 FROM events_merge")
+        pairs = []
+        for pair in self.cursor.fetchall():
+            pairs.append((pair[0], pair[1]))
+        return pairs
