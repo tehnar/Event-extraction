@@ -302,11 +302,21 @@ class DatabaseHandler:
         event_data = self.cursor.fetchone()
         return event_data[0], event_data[1], event_data[2]
 
-    def get_event_ids(self):
-        self.cursor.execute("SELECT id FROM events")
+    def get_event_ids_from(self, from_id=0):
+        self.cursor.execute("SELECT id FROM events WHERE id>=%s ORDER BY id", (from_id,))
         ids = []
-        for id in self.cursor.fetchall():
-            ids.append(id[0])
+
+        if self.cursor.rowcount > 1:
+            for id in self.cursor.fetchall():
+                ids.append(id[0])
+        return ids
+
+    def get_event_ids_to(self, to_id=0):
+        self.cursor.execute("SELECT id FROM events WHERE id<=%s ORDER BY id", (to_id,))
+        ids = []
+        if self.cursor.rowcount > 1:
+            for id in self.cursor.fetchall():
+                ids.append(id[0])
         return ids
 
     def add_events_to_events_merge(self, id1, id2):
@@ -316,8 +326,10 @@ class DatabaseHandler:
     def get_events_merge(self):
         self.cursor.execute("SELECT id, event1_id, event2_id FROM events_merge")
         data = []
-        for entry in self.cursor.fetchall():
-            data.append((entry[0], entry[1], entry[2]))
+
+        if self.cursor.rowcount > 1:
+            for entry in self.cursor.fetchall():
+                data.append((entry[0], entry[1], entry[2]))
         return data
 
     def get_event_merge_by_id(self, id):
