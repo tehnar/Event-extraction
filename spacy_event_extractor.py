@@ -35,7 +35,7 @@ class SpacyEventExtractor:
 
     @staticmethod
     def _have_pronouns(text):
-        pronouns = ['i', 'we', 'you', 'he', 'she', 'they', 'be', 'him', 'her']
+        pronouns = ['i', 'you', 'he', 'she', 'they', 'be', 'him', 'her']
         return list(filter(lambda s: s.lower() in pronouns, str(text).split())) != []
 
     @staticmethod
@@ -43,7 +43,8 @@ class SpacyEventExtractor:
         for child in verb.children:
             if child.orth_ == 'will':
                 return False  # will have etc
-        if verb.orth_ in [verb.lemma_, verb.lemma_ + 's', 'have', 'has', 'do']:
+        lemma = verb.lemma_.lower()
+        if verb.orth_.lower() in [lemma, lemma + 's', lemma + 'es', 'have', 'has', 'do']:
             return True
         return False
 
@@ -72,15 +73,19 @@ class SpacyEventExtractor:
         return "", None
 
     @staticmethod
-    def extract(text):
+    def extract(text, replace_we=None):
         text = ' '.join(text.split())  # remove any extra whitespaces
+        for aux, replace_with in zip(['ve', 're'], ['have', 'are']):
+            text = text.replace("'" + aux, " " + replace_with).replace("’" + aux, " " + replace_with)
+            # just because sometimes spaCy fails on sth like we've
         events = []
         text = text.strip()
         if len(text) == 0:
             return []
         text_doc = SpacyEventExtractor._nlp(text)
         sentences = []
-        for sentence in text_doc.sents:
+        for sentence in text_doc.sents:  # actually we need to split on sentences twice because sometimes spaCy cannot
+            #  split correctly a long sentence
             doc = SpacyEventExtractor._nlp(str(sentence))
             sentences += [str(s) for s in doc.sents]
         for sentence in sentences:
@@ -136,7 +141,22 @@ class SpacyEventExtractor:
             if SpacyEventExtractor._is_present_simple(verb) or SpacyEventExtractor._is_present_continuous(verb):
                 continue
 
+
+            entities_strings = []
+            for string in [entity1_string, entity2_string]:
+                new_string = ""
+                for word in string.split():
+                    if word == "we" and replace_we is not None:
+                        new_string += replace_we + " "
+                    elif word == "We" and replace_we is not None:
+                        new_string += replace_we.capitalize() + " "
+                    else:
+                        new_string += str(word) + " "
+                entities_strings.append(new_string)
+            entity1_string, entity2_string = entities_strings
+
             events.append(Event(str(entity1_string), str(entity2_string), str(aux_verbs) + str(verb), str(sentence)))
+
             print(sentence)
             print('Object: ', entity1_string)
             print('Action: ', str(aux_verbs) + str(verb))
@@ -154,13 +174,14 @@ def main():
     #exit()
 
     #db_handler.clear_db()
-
     for downloader in article_downloaders:
         cnt = 1
         try:
             for article in islice(downloader.get_articles(), 0, 1600):
-                events = SpacyEventExtractor.extract(article.summary)
-                events += SpacyEventExtractor.extract(article.text)
+                events = SpacyEventExtractor.extract(article.summary, article.site_owner)
+                events += SpacyEventExtractor.extract(article.text, article.site_owner)
+                events += SpacyEventExtractor.extract(article.header, article.site_owner)
+
                 if db_handler.get_article_id(article) is not None:
                     continue
                 for event in events:
