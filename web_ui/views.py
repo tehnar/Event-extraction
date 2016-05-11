@@ -58,7 +58,8 @@ def load_events_merge():
 def load_events():
     session["start_index"] = session["current_index"]
     session["current_index"] += DEFAULT_ARTICLES_COUNT
-    events = db_handler.get_events_starting_from(session["current_index"], datetime.datetime.now())
+    events = db_handler.get_events_starting_from(session["current_index"], datetime.datetime.now(),
+                                                 session["pattern"], session["site_name"])
 
     return jsonify(result=[get_extended_event(e.id).json() for e in events[session["start_index"]: session["current_index"]]])
 
@@ -224,6 +225,7 @@ def modify_event_by_id():
 def events():
     form = EventsForm()
     session["start_index"] = session["current_index"] = 0
+    session["site_name"] = session["pattern"] = ""
     return render_template("events.html", form=form)
 
 
@@ -242,3 +244,10 @@ def articles():
 def statistics():
     return render_template("merge.html", form=Form())
 
+
+@app.route('/_search_events', methods=['POST'])
+def search_events():
+    session["start_index"] = session["current_index"] = 0
+    session["site_name"] = request.form.get('site_name')
+    session["pattern"] = request.form.get('pattern')
+    return load_events()

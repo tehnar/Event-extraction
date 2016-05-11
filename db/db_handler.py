@@ -123,7 +123,8 @@ class DatabaseHandler:
         self.connection.commit()
         # TODO: remove needless articles
 
-    def get_events_starting_from(self, count, start_date):
+    def get_events_starting_from(self, count, start_date, pattern, site_name):
+        print(site_name)
         self.cursor.execute("""SELECT event.id, entity1.entity_name, entity2.entity_name, action.action_name,
         event.sentence, date.date
         FROM events event
@@ -133,8 +134,8 @@ class DatabaseHandler:
         INNER JOIN entities entity2 ON entity2.id = event.entity2
         INNER JOIN actions action ON action.id = event.action
         INNER JOIN dates date ON date.id = event.date
-        WHERE article.publish_date <= %s
-        ORDER BY article.publish_date DESC, event.id LIMIT %s""", (start_date, count))
+        WHERE article.publish_date <= %s AND (article.site_name=%s OR (%s = '') IS NOT FALSE)
+        ORDER BY article.publish_date DESC, event.id LIMIT %s""", (start_date, site_name, site_name, count))
 
         events = []
         for raw_event in self.cursor.fetchall():
@@ -328,3 +329,7 @@ class DatabaseHandler:
     def del_event_merge_by_id(self, id):
         self.cursor.execute("DELETE FROM events_merge WHERE id=%s", (id,))
         self.connection.commit()
+
+    def get_articles(self):
+        self.cursor.execute("SELECT * FROM articles")
+        return list(map(lambda t: Article(t[2], t[8], t[6], t[1], "blog.jetbrains.com", t[5], t[7], t[3]), self.cursor.fetchall()))

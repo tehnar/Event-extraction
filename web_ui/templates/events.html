@@ -20,6 +20,15 @@
         <li><a href="#" onclick=fullAutoMerge()>Full AutoMerge</a></li>
     </ul>
     <progress id="progress_bar" value="0" max="100"></progress>
+    <div class="form-group"> 
+        <label for="pattern"> Events containing: </label>
+        <input name="pattern"/>
+
+        <label for="site_name"> Site address: </label>
+        <input name="site_name"/>
+
+        <button class="search" onclick="search()"> Search for events! </button>
+    </div>
     <table class="table" id="events">
         <tr>
             <td class="th"> Date </td>

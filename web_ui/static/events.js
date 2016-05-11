@@ -113,6 +113,21 @@ function saveEvent(id) {
         });
 }
 
+function search() {
+    var pattern = $("input[name='pattern']");
+    var site_name = $("input[name='site_name']");
+    $.post($SCRIPT_ROOT + '/_search_events', 
+            {pattern: pattern.val(), site_name: site_name.val()}, 
+            function(data) {
+                var table = document.getElementById("events");
+                table.innerHTML = "";
+                var events = data.result;
+                for (var index in events) {
+                    table.innerHTML += drawEventWithButtons(events[index]);
+                }
+            });
+}
+
 function hideRow(id) {
     $('tr#' + id + '.even').toggle();
     var row = $('tbody#' + id);
