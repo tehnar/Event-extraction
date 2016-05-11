@@ -26,10 +26,11 @@ function removeElement(array, e) {
 }
 
 var selected_events = [];
-var progressTime = null;
+var progressTimer = null;
 
 updateMergingButton();
 loadEvents();
+fullAutoMerge();
 
 function modifyEvent(id) {
     $.post($SCRIPT_ROOT + '/_get_event', {id: id}, function(data) {
@@ -92,7 +93,7 @@ function updateProgressBar() {
 
 function fullAutoMerge() {
     progressTimer = setInterval(updateProgressBar, 1000);
-    $.post($SCRIPT_ROOT + '/_full_auto_merge', {}, function(data) {});
+    $.post($SCRIPT_ROOT + '/_auto_merge', {}, function (data) {});
 }
 
 function saveEvent(id) {

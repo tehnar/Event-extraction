@@ -10,9 +10,24 @@ import numpy
 import threading
 
 
+class Settings:
+    FILE_NAME = "settings.txt"
+
+    def get_last_processed_event_id(self):
+        f = open(self.FILE_NAME, "r")
+        last_id = f.read()
+        f.close()
+        return int(last_id)
+
+    def put_last_processed_event_id(self, last_id):
+        f = open(self.FILE_NAME, "w")
+        f.write(str(last_id))
+        f.close()
+
+
 DEFAULT_ARTICLES_COUNT = 10
 db_handler = DatabaseHandler()
-
+settings = Settings()
 MERGE_PROGRESS = 0
 
 class EventsForm(Form):
@@ -27,7 +42,6 @@ class EventsForm(Form):
 
 class FetchArticleForm(Form):
     fetch_articles = SubmitField('Fetch new articles')
-
 
 @app.route('/')
 def redirect_to_events():
@@ -76,13 +90,9 @@ def delete_event_by_id():
     db_handler.del_event_by_id(id)
     return jsonify(result=None)
 
-def thread_full_auto_merge():
-    auto_merge(db_handler.get_event_ids())
-
-#TODO: remove
-@app.route('/_full_auto_merge', methods=['POST'])
-def full_auto_merge():
-    t1 = threading.Thread(target=thread_full_auto_merge)
+@app.route('/_auto_merge', methods=['POST'])
+def run_auto_merge():
+    t1 = threading.Thread(target=auto_merge)
     t1.start()
     return jsonify(result=None)
 
@@ -176,23 +186,42 @@ def are_same(id1, id2):
 
     return True
 
-def auto_merge(event_ids):
+def auto_merge():
     global MERGE_PROGRESS
+    global settings
+    global db_handler
 
-    events_count = len(event_ids)
+    last_id = settings.get_last_processed_event_id()
+
+    old_ids = db_handler.get_event_ids_to(last_id)
+    new_ids = db_handler.get_event_ids_from(last_id + 1)
+
+    old_count = len(old_ids)
+    new_count = len(new_ids)
 
     MERGE_PROGRESS = 0
-    total_count = (events_count * (events_count - 1)) / 2
+    total_count = new_count * old_count + (new_count * (new_count - 1)) / 2
     count = 0
 
-    for i1 in range(0, events_count):
-        for i2 in range(i1 + 1, events_count):
-            if are_same(event_ids[i1], event_ids[i2]):
-                #TODO: change handler
-                db_handler.add_events_to_events_merge(event_ids[i1], event_ids[i2])
+    for i1 in range(0, new_count):
+        for i2 in range(0, old_count):
+            if are_same(new_ids[i1], old_ids[i2]):
+                db_handler.add_events_to_events_merge(new_ids[i1], old_ids[i2])
 
             count += 1
             MERGE_PROGRESS = 100 * count / total_count
+
+        for i2 in range(i1 + 1, new_count):
+            if are_same(new_ids[i1], new_ids[i2]):
+                db_handler.add_events_to_events_merge(new_ids[i1], new_ids[i2])
+
+            count += 1
+            MERGE_PROGRESS = 100 * count / total_count
+
+    MERGE_PROGRESS = 100
+    if new_count > 0:
+        settings.put_last_processed_event_id(new_ids[new_count - 1])
+
 
 @app.route('/_modify_event', methods=['POST'])
 def modify_event_by_id():
