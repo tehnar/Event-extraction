@@ -38,7 +38,7 @@ tr:nth-child(even) {
     background-color: #FAFAFA;
 }
 
-table.table tr:hover {
+tbody tr:hover {
     background-color: #E9FFE9;
 }
 
