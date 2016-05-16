@@ -54,7 +54,7 @@ function drawEventInnerHtmlWithoutButtons(event) {
     var html = '<td ondblclick=clickEvent(' + event.id + ')>' + event['pdate'] + '</td>';
     var keys = ["entity1", "action", "entity2"];
     for (key in keys) {
-        html += '<td ondblclick=clickEvent(' + event.id + ')>' + event[keys[key]] + '</td>';
+        html += '<td ondblclick=clickEvent(' + event.id + ')>' + event['main_' + keys[key]] + '</td>';
     }
     html += '<td ondblclick=clickEvent(' + event.id + ')>' + getHighlightedSentence(event) + '</td>';
     html += '<td ondblclick=clickEvent(' + event.id + ')>' + '<a href="' + event['url'] + '">' + event['url'] + '</a>' + '</td>';

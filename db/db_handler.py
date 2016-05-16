@@ -114,7 +114,7 @@ class DatabaseHandler:
         return event_id
 
     def del_event_by_id(self, event_id):
-        #update sets    
+        #update sets
         self.del_event_from_set(event_id)
 
         self.cursor.execute("""DELETE FROM event_sources WHERE event_id=(%s)""", (event_id,))
@@ -211,20 +211,28 @@ class DatabaseHandler:
             for id in ids:
                 self.join_two(table, id, root_id)
 
+    def get_entity_len(self, id):
+        self.cursor.execute("SELECT entity_name FROM entities WHERE id = %s", (id,))
+        return len(self.cursor.fetchone()[0])
+
     def join_two(self, table, event1_id, event2_id):
         event1_id = self.get_set_by_id(table, event1_id)
         event2_id = self.get_set_by_id(table, event2_id)
 
+        if table == "entities_sets":
+            if self.get_entity_len(event1_id) < self.get_entity_len(event2_id):
+                event1_id, event2_id = event2_id, event1_id
+
         if event1_id != event2_id:
-            self.cursor.execute("""INSERT INTO """ + table + """ (child_id, parent_id) VALUES (%s, %s) """, (event1_id, event2_id))
-            self.cursor.execute("""UPDATE """ + table + """ SET parent_id=%s WHERE parent_id=%s""", (event2_id, event1_id))
+            self.cursor.execute("INSERT INTO " + table + " (child_id, parent_id) VALUES (%s, %s) ", (event1_id, event2_id))
+            self.cursor.execute("UPDATE " + table + " SET parent_id=%s WHERE parent_id=%s", (event2_id, event1_id))
             self.connection.commit()
 
     def del_from_set(self, table, event_id):
-        self.cursor.execute("""SELECT child_id FROM """ + table + """ WHERE parent_id=%s""", (event_id,))
+        self.cursor.execute("SELECT child_id FROM " + table + " WHERE parent_id=%s", (event_id,))
         result = self.cursor.fetchall()
         if len(result) > 0:
-            self.cursor.execute("""DELETE FROM """ + table + """ WHERE parent_id=%s""", (event_id,))
+            self.cursor.execute("DELETE FROM  + table +  WHERE parent_id=%s", (event_id,))
             self.connection.commit()
 
             if table == "entities_sets":
@@ -236,7 +244,7 @@ class DatabaseHandler:
 
             self.join(table, min(result, key=lambda pair: len(pair[1]))[0], list(map(lambda pair: pair[0], result)))
         else:
-            self.cursor.execute("""DELETE FROM """ + table + """ WHERE child_id=%s""", (event_id,))
+            self.cursor.execute("DELETE FROM " + table + " WHERE child_id=%s", (event_id,))
             self.connection.commit()
 
     def get_event_set_for_event_by_id(self, event_id):
@@ -250,6 +258,9 @@ class DatabaseHandler:
 
     def get_entity_set_by_entity_id(self, entity_id):
         return self.get_set_by_id("entities_sets", entity_id)
+
+    def get_action_set_by_action_id(self, action_id):
+        return self.get_set_by_id("actions_sets", action_id)
 
     def join_entities_by_events(self, ids, mod):
         entities = []
@@ -275,7 +286,7 @@ class DatabaseHandler:
             action_id = self.cursor.fetchone()[0]
             action = self.get_action_by_id(action_id)
             actions.append((action_id, action))
-            
+
         self.join("actions_sets", min(actions, key=lambda pair: len(pair[1]))[0],
                   list(map(lambda pair: pair[0], actions)))
 
@@ -345,3 +356,10 @@ class DatabaseHandler:
     def get_articles(self):
         self.cursor.execute("SELECT * FROM articles")
         return list(map(lambda t: Article(t[2], t[8], t[6], t[1], "blog.jetbrains.com", t[5], t[7], t[3]), self.cursor.fetchall()))
+
+    def get_main_entity_core_by_event_id(self, id):
+        entity1, action, entity2 = self.get_entity_core_id_by_event_id(id)
+        entity1 = self.get_entity_set_by_entity_id(entity1)
+        action = self.get_action_set_by_action_id(action)
+        entity2 = self.get_entity_set_by_entity_id(entity2)
+        return self.get_entity_by_id(entity1), self.get_action_by_id(action), self.get_entity_by_id(entity2)

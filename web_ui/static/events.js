@@ -33,7 +33,7 @@ loadEvents();
 fullAutoMerge();
 
 function modifyEvent(id) {
-    $.post($SCRIPT_ROOT + '/_get_event', {id: id}, function(data) {
+    $.post($SCRIPT_ROOT + '/_modify_event', {id: id}, function(data) {
         $('tr#' + id + '.odd').html(drawEditEventInnerHtmlWithButtons(data.result));
     });
 }
@@ -54,6 +54,7 @@ function clickEvent(id) {
     var index = find(selected_events, id);
     if (index != -1) {
         remove(selected_events, index);
+        cancelEvent(id);
     } else {
         selected_events.push(id);
     }

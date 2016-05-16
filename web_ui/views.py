@@ -51,6 +51,7 @@ def get_extended_event(id):
     event = db_handler.get_event_by_id(id)
     event.pdate = db_handler.get_event_publish_date(id)
     event.url = db_handler.get_event_source(id).url
+    event.main_entity1, event.main_action, event.main_entity2 = db_handler.get_main_entity_core_by_event_id(id)
     return event
 
 @app.route('/_get_events_merge_count', methods=['POST'])
