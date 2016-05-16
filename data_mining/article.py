@@ -5,10 +5,11 @@ _known_sites = {'jetbrains.com': 'JetBrains',
                 'mozilla.org': 'Mozilla',
                 'djangoproject.com': 'Django'}
 
+
 class Article:
     def __init__(self, raw_text="", header="", summary="", text="", site_name="", url="", author_name="",
                  publish_date=None):
-        url_base = '.'.join(url.split('.')[-2:]).split('/')[0]
+        url_base = "" if url == "" else '.'.join(url.split('/')[2].split('.')[-2:])
 
         self.raw_text = raw_text
         self.header = header

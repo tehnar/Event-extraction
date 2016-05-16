@@ -1,21 +1,26 @@
 from itertools import *
-
+import types
+import spacy.tokens
 from spacy.en import English
-
 from data_mining import article_downloaders, Article
 from db.db_handler import DatabaseHandler
 from event import Event
-
+import re
 
 class SpacyEventExtractor:
     _nlp = English()
     _keywords = list(map(lambda s: s.strip().lower(), open('keywords.txt', 'r').readlines()))
+    _known_phrases = [('is out', 'released'), ('is here', 'released'), ('is there', 'released'),
+                      ('is out', 'released'), ('is open', 'started'), ('is available', 'released')
+                     ]
+    _important_actions = ['release', 'start', 'publish', 'announce', 'update']
+    _known_abbreviations = [('RC', 'release candidate'), ('EAP', 'early access program')]
 
     def __init__(self):
         pass
 
     @staticmethod
-    def _get_tree(root, depth, good_token):
+    def _get_tree(root: spacy.tokens.Token, depth: int, good_token: types.LambdaType) -> spacy.tokens.Token:
         if depth == 0:
             return [root] if good_token(root) else []
         result = []
@@ -27,36 +32,39 @@ class SpacyEventExtractor:
         return result
 
     @staticmethod
-    def _get_chunk(token):
+    def _get_chunk(token: spacy.tokens.Token) -> (str, spacy.tokens.Token):
         if token is None:
             return "", None
-        return " ".join(map(str, SpacyEventExtractor._get_tree(token, 2,
-            lambda tok: tok is token or tok.dep_.endswith("mod") or tok.dep_ == "compound"))), token
+        return " ".join(map(str, SpacyEventExtractor._get_tree(
+            token, 2, lambda tok: tok is token or tok.dep_.endswith("mod") or tok.dep_ == "compound"))), token
 
     @staticmethod
-    def _have_pronouns(text):
-        pronouns = ['i', 'you', 'he', 'she', 'they', 'be', 'him', 'her']
+    def _have_pronouns(text: spacy.tokens.Doc) -> bool:
+        pronouns = ['i', 'you', 'he', 'she', 'they', 'be', 'him', 'her', 'it']
+        # 'we' is a good pronoun as it refers to a company
         return list(filter(lambda s: s.lower() in pronouns, str(text).split())) != []
 
     @staticmethod
-    def _is_present_simple(verb):
+    def _is_present_simple(verb: spacy.tokens.Token) -> bool:
         for child in verb.children:
             if child.orth_ == 'will':
                 return False  # will have etc
         lemma = verb.lemma_.lower()
-        if verb.orth_.lower() in [lemma, lemma + 's', lemma + 'es', 'have', 'has', 'do']:
+        if verb.orth_.lower() in [lemma, lemma + 's', lemma + 'es', 'have', 'has', 'do', 'is', 'are']:
             return True
         return False
 
     @staticmethod
-    def _is_present_continuous(verb):
+    def _is_present_continuous(verb: spacy.tokens.Token) -> bool:
         for child in verb.children:
             if child.dep_ == 'aux' and child.lemma_ not in ['be', 'is', 'are', 'am']:
                 return False  # will have etc
         return verb.orth_.endswith('ing')
 
     @staticmethod
-    def _get_prep_with_word(token):
+    def _get_prep_with_word(token: spacy.tokens.Token) -> (str, spacy.tokens.Token):
+        if token is None:
+            return "", None
         prep = None
         for child in token.rights:
             if child.dep_ == "prep":
@@ -73,11 +81,14 @@ class SpacyEventExtractor:
         return "", None
 
     @staticmethod
-    def extract(text, replace_we=None):
+    def extract(text: str, replace_we: str = None) -> list:
         text = ' '.join(text.split())  # remove any extra whitespaces
-        for aux, replace_with in zip(['ve', 're'], ['have', 'are']):
+        for aux, replace_with in [('ve', 'have'), ('re', 'are')]:
             text = text.replace("'" + aux, " " + replace_with).replace("’" + aux, " " + replace_with)
             # just because sometimes spaCy fails on sth like we've
+        for abbr, full in SpacyEventExtractor._known_abbreviations + SpacyEventExtractor._known_phrases:
+            reg = re.compile(abbr, re.IGNORECASE)
+            text = reg.sub(full, text)
         events = []
         text = text.strip()
         if len(text) == 0:
@@ -117,9 +128,6 @@ class SpacyEventExtractor:
                     entity2 = child
                     break
 
-            if entity2 is None:
-                continue
-
             entity1_string, entity1 = SpacyEventExtractor._get_chunk(entity1)
             entity2_string, entity2 = SpacyEventExtractor._get_chunk(entity2)
             entities = []
@@ -141,7 +149,6 @@ class SpacyEventExtractor:
             if SpacyEventExtractor._is_present_simple(verb) or SpacyEventExtractor._is_present_continuous(verb):
                 continue
 
-
             entities_strings = []
             for string in [entity1_string, entity2_string]:
                 new_string = ""
@@ -155,6 +162,8 @@ class SpacyEventExtractor:
                 entities_strings.append(new_string)
             entity1_string, entity2_string = entities_strings
 
+            if verb.lemma_.lower() not in SpacyEventExtractor._important_actions and entity2_string == "":
+                continue  # Entity2 can be empty only in some special cases: IDEA 2.0 released
             events.append(Event(str(entity1_string), str(entity2_string), str(aux_verbs) + str(verb), str(sentence)))
 
             print(sentence)
@@ -173,13 +182,14 @@ def main():
     #    SpacyEventExtractor.extract(sent)
     #exit()
 
-    #db_handler.clear_db()
+    db_handler.clear_db()
+
     for downloader in article_downloaders:
         cnt = 1
         try:
             for article in islice(downloader.get_articles(), 0, 1600):
                 events = SpacyEventExtractor.extract(article.summary, article.site_owner)
-                events += SpacyEventExtractor.extract(article.text, article.site_owner)
+                #events += SpacyEventExtractor.extract(article.text, article.site_owner)
                 events += SpacyEventExtractor.extract(article.header, article.site_owner)
 
                 if db_handler.get_article_id(article) is not None:
