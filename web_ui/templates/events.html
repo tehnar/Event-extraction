@@ -16,10 +16,12 @@
 
 </html>
     <ul class="tool_bar">
+        <li></li>
         <li><a href="#" onclick=joinEvents()>Join events</a></li>
     </ul>
     <progress id="progress_bar" value="0" max="100"></progress>
-    <div class="form-group"> 
+
+    <div class="form-group">
         <label for="pattern"> Events containing: </label>
         <input name="pattern"/>
 
@@ -28,6 +30,18 @@
 
         <button class="search" onclick="search()"> Search for events! </button>
     </div>
+
+    <div id="dialog-overlay"></div>
+    <div id="dialog-box">
+        <div class="dialog-content">
+            Choose options: <br>
+            <input id="dialog-entity1" class="dialog-checkbox" type="checkbox"> Enity1 <br>
+            <input id="dialog-action" class="dialog-checkbox" type="checkbox"> Action <br>
+            <input id="dialog-entity2" class="dialog-checkbox" type="checkbox"> Enity2 <br>
+            <a id="dialog-ok" href="#" class="button">Ok</a>
+        </div>
+    </div>
+
     <table class="table" id="events">
         <tr>
             <td class="th"> Date </td>

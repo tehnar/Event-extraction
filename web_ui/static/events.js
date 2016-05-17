@@ -33,7 +33,7 @@ loadEvents();
 fullAutoMerge();
 
 function modifyEvent(id) {
-    $.post($SCRIPT_ROOT + '/_modify_event', {id: id}, function(data) {
+    $.post($SCRIPT_ROOT + '/_get_event', {id: id}, function(data) {
         $('tr#' + id + '.odd').html(drawEditEventInnerHtmlWithButtons(data.result));
     });
 }
@@ -61,15 +61,7 @@ function clickEvent(id) {
     $('tr#' + id + '.odd').toggleClass("selected");
 }
 
-function joinEvents() {
-    if (selected_events.length < 2) {
-        return;
-    }
-
-    var joinEntities1 = confirm("Do you want to merge 'Entity1' fields?");
-    var joinActions = confirm("Do you want to merge 'Action' fields?");
-    var joinEntities2 = confirm("Do you want to merge 'Entity2' fields?");
-
+function joinEventsAction(joinEntities1, joinActions, joinEntities2) {
     $.post($SCRIPT_ROOT + '/_join_events',
         {ids: selected_events, joinEntities1: joinEntities1, joinActions: joinActions, joinEntities2: joinEntities2},
         function(data) {
@@ -77,6 +69,13 @@ function joinEvents() {
                 clickEvent(selected_events[0]);
         }
     });
+}
+
+function joinEvents() {
+    if (selected_events.length < 2) {
+        return;
+    }
+    popupMergeDialog();
 }
 
 function updateProgressBar() {
@@ -176,3 +175,32 @@ $(window).bind('scroll', _.throttle(function() {
         loadEvents();
     }
 }, 100));
+
+$(document).ready(function () {
+	$('a.btn-ok, #dialog-ok').click(function () {
+		$('#dialog-overlay, #dialog-box').hide();
+        joinEventsAction($('#dialog-entity1').is(":checked"),
+            $('#dialog-action').is(":checked"),
+            $('#dialog-entity2').is(":checked"));
+		return false;
+	});
+
+	$(window).resize(function () {
+		if (!$('#dialog-box').is(':hidden')) popupMergeDialog();
+	});
+});
+
+function popupMergeDialog() {
+	var maskHeight = $(document).height();
+	var maskWidth = $(window).width();
+
+	var dialogTop = (maskHeight/3) - ($('#dialog-box').height());
+	var dialogLeft = (maskWidth/2) - ($('#dialog-box').width()/2);
+
+	$('#dialog-entity1').prop("checked", false);
+    $('#dialog-action').prop("checked", false);
+    $('#dialog-entity2').prop("checked", false);
+
+    $('#dialog-overlay').css({height:maskHeight, width:maskWidth}).show();
+	$('#dialog-box').css({top:dialogTop, left:dialogLeft}).show();
+}

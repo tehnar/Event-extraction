@@ -15,6 +15,18 @@
 {% extends "base.html" %}
 {% block content %}
 </html>
+
+    <div id="dialog-overlay"></div>
+    <div id="dialog-box">
+        <div class="dialog-content">
+            Choose options: <br>
+            <input id="dialog-entity1" class="dialog-checkbox" type="checkbox"> Enity1 <br>
+            <input id="dialog-action" class="dialog-checkbox" type="checkbox"> Action <br>
+            <input id="dialog-entity2" class="dialog-checkbox" type="checkbox"> Enity2 <br>
+            <a id="dialog-ok" href="#" class="button">Ok</a>
+        </div>
+    </div>
+
     <table class="table" id="events">
         <tr>
             <td class="th"> Date </td>
