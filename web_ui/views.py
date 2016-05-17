@@ -169,7 +169,6 @@ def are_same(id1, id2):
     if entity11_id != entity21_id:
         return False
 
-
     action1_id = db_handler.get_action_set_by_action_id(action1_id)
     action2_id = db_handler.get_action_set_by_action_id(action2_id)
 

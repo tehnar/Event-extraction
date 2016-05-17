@@ -39,7 +39,7 @@ function modifyEvent(id) {
 }
 
 function deleteEvent(id) {
-    removeElement(selected_events, id);
+    removeElement(selected_events, id);1
     $('tbody#' + id).remove();
     $.post($SCRIPT_ROOT + '/_delete_event', {id: id}, function(data) {});
 }
@@ -194,13 +194,10 @@ function popupMergeDialog() {
 	var maskHeight = $(document).height();
 	var maskWidth = $(window).width();
 
-	var dialogTop = (maskHeight/3) - ($('#dialog-box').height());
-	var dialogLeft = (maskWidth/2) - ($('#dialog-box').width()/2);
-
 	$('#dialog-entity1').prop("checked", false);
     $('#dialog-action').prop("checked", false);
     $('#dialog-entity2').prop("checked", false);
 
     $('#dialog-overlay').css({height:maskHeight, width:maskWidth}).show();
-	$('#dialog-box').css({top:dialogTop, left:dialogLeft}).show();
+    $('#dialog-box').show();
 }

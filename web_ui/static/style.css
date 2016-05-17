@@ -230,7 +230,7 @@ span.block {
 	background:#000;
 
 	/* make sure it appear behind the dialog box but above everything else */
-	position:absolute;
+	position:fixed;
 	top:0; left:0;
 	z-index:3000;
 
@@ -254,7 +254,11 @@ span.block {
 	width:328px;
 
 	/* make sure it has the highest z-index */
-	position:absolute;
+	position:fixed;
+    top: 50%;
+    left: 50%;
+    -webkit-transform: translate(-50%, -50%);
+    transform: translate(-50%, -50%);
 	z-index:5000;
 
 	/* hide it by default */
