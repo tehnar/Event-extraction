@@ -160,7 +160,7 @@ function mouseOver(id) {
 }
 
 function loadEvents() {
-    $.post($SCRIPT_ROOT + '/_load_events', {}, function(data) {
+    $.post($SCRIPT_ROOT + '/_load_events', {event_cnt: $('.odd').length}, function(data) {
             var table = document.getElementById("events");
             var events = data.result;
             for (var index in events) {

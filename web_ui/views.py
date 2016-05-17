@@ -71,12 +71,13 @@ def load_events_merge():
 
 @app.route('/_load_events', methods=['POST'])
 def load_events():
-    session["start_index"] = session["current_index"]
-    session["current_index"] += DEFAULT_ARTICLES_COUNT
-    events = db_handler.get_events_starting_from(session["current_index"], datetime.datetime.now(),
+    event_cnt = request.form.get('event_cnt', 0, type=int)
+    print(event_cnt)
+    events = db_handler.get_events_starting_from(event_cnt + DEFAULT_ARTICLES_COUNT, datetime.datetime.now(),
                                                  session["pattern"], session["site_name"])
 
-    return jsonify(result=[get_extended_event(e.id).json() for e in events[session["start_index"]: session["current_index"]]])
+    return jsonify(result=[get_extended_event(e.id).json() for e in
+                           events[event_cnt: event_cnt + DEFAULT_ARTICLES_COUNT]])
 
 
 @app.route('/_delete_events_merge', methods=['POST'])
@@ -253,8 +254,6 @@ def modify_event_by_id():
 @app.route('/events', methods = ['GET', 'POST'])
 def events():
     form = EventsForm()
-    session["start_index"] = session["current_index"] = 0
-    session["site_name"] = session["pattern"] = ""
     return render_template("events.html", form=form)
 
 
@@ -276,7 +275,4 @@ def statistics():
 
 @app.route('/_search_events', methods=['POST'])
 def search_events():
-    session["start_index"] = session["current_index"] = 0
-    session["site_name"] = request.form.get('site_name')
-    session["pattern"] = request.form.get('pattern')
     return load_events()
