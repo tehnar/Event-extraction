@@ -50,9 +50,6 @@ function popupMergeDialog(id) {
 	var maskHeight = $(document).height();
 	var maskWidth = $(window).width();
 
-	var dialogTop = (maskHeight/3) - ($('#dialog-box').height());
-	var dialogLeft = (maskWidth/2) - ($('#dialog-box').width()/2);
-
     $('#dialog-entity1').prop("checked", false);
     $('#dialog-action').prop("checked", false);
     $('#dialog-entity2').prop("checked", false);
@@ -65,5 +62,5 @@ function popupMergeDialog(id) {
     });
 
     $('#dialog-overlay').css({height:maskHeight, width:maskWidth}).show();
-	$('#dialog-box').css({top:dialogTop, left:dialogLeft}).show();
+	$('#dialog-box').show();
 }
