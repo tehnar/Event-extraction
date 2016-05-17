@@ -9,6 +9,21 @@ function remove(array, from, to) {
     return array.push.apply(array, rest);
 }
 
+function getUrlParameter(sParam) {
+    var sPageURL = decodeURIComponent(window.location.search.substring(1)),
+        sURLVariables = sPageURL.split('&'),
+        sParameterName,
+        i;
+
+    for (i = 0; i < sURLVariables.length; i++) {
+        sParameterName = sURLVariables[i].split('=');
+
+        if (sParameterName[0] === sParam) {
+            return sParameterName[1] === undefined ? true : sParameterName[1];
+        }
+    }
+}
+
 function find(array, e) {
     for (var i = 0; i < array.length; ++i) {
         if (array[i] == e) {
@@ -114,10 +129,9 @@ function saveEvent(id) {
 }
 
 function search() {
-    var pattern = $("input[name='pattern']");
-    var site_name = $("input[name='site_name']");
+    var query= $("input[name='query']");
     $.post($SCRIPT_ROOT + '/_search_events', 
-            {pattern: pattern.val(), site_name: site_name.val()}, 
+            {query: query.val()}, 
             function(data) {
                 var table = document.getElementById("events");
                 table.innerHTML = "";
@@ -160,7 +174,7 @@ function mouseOver(id) {
 }
 
 function loadEvents() {
-    $.post($SCRIPT_ROOT + '/_load_events', {event_cnt: $('.odd').length}, function(data) {
+    $.post($SCRIPT_ROOT + '/_load_events', {event_cnt: $('.odd').length, query: getUrlParameter('query')}, function(data) {
             var table = document.getElementById("events");
             var events = data.result;
             for (var index in events) {

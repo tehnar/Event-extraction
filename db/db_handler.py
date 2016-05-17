@@ -124,7 +124,8 @@ class DatabaseHandler:
         # TODO: remove needless articles
 
     def get_events_starting_from(self, count, start_date, pattern, site_name):
-        print(site_name)
+        pattern = '%' + '%'.join(pattern.split('+')) + '%'
+        print(pattern, site_name)
         self.cursor.execute("""SELECT event.id, entity1.entity_name, entity2.entity_name, action.action_name,
         event.sentence, date.date
         FROM events event
@@ -134,8 +135,9 @@ class DatabaseHandler:
         INNER JOIN entities entity2 ON entity2.id = event.entity2
         INNER JOIN actions action ON action.id = event.action
         INNER JOIN dates date ON date.id = event.date
-        WHERE article.publish_date <= %s AND (article.site_name=%s OR (%s = '') IS NOT FALSE)
-        ORDER BY article.publish_date DESC, event.id LIMIT %s""", (start_date, site_name, site_name, count))
+        WHERE article.publish_date <= %s AND article.url ILIKE %s AND event.sentence ILIKE %s
+        ORDER BY article.publish_date DESC, event.id LIMIT %s""",
+                            (start_date, '%' + site_name + '%', pattern, count))
 
         events = []
         for raw_event in self.cursor.fetchall():

@@ -72,9 +72,14 @@ def load_events_merge():
 @app.route('/_load_events', methods=['POST'])
 def load_events():
     event_cnt = request.form.get('event_cnt', 0, type=int)
-    print(event_cnt)
+    query = request.form.get('query', "", type=str)
+    params = query.split('site:')
+    site = ""
+    pattern = params[0]
+    if len(params) > 1:
+        site = params[1]
     events = db_handler.get_events_starting_from(event_cnt + DEFAULT_ARTICLES_COUNT, datetime.datetime.now(),
-                                                 session["pattern"], session["site_name"])
+                                                 pattern, site)
 
     return jsonify(result=[get_extended_event(e.id).json() for e in
                            events[event_cnt: event_cnt + DEFAULT_ARTICLES_COUNT]])
