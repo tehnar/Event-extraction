@@ -25,10 +25,6 @@ function joinEventsMergeAction(id, joinEntities1, joinActions, joinEntities2) {
 }
 
 function joinEventsMerge(id) {
-    /*
-    var joinEntities1 = confirm("Do you want to merge 'Entity1' fields?");
-    var joinActions = confirm("Do you want to merge 'Action' fields?");
-    var joinEntities2 = confirm("Do you want to merge 'Entity2' fields?");*/
     popupMergeDialog(id);
 }
 

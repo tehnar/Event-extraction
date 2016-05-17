@@ -118,8 +118,13 @@ ul.tool_bar {
     background-color: #585858;
 }
 
-ul.tool_bar li{
+ul.tool_bar li {
     float: left;
+}
+
+#search {
+    margin-left: 80px;
+    padding-top: 7px;
 }
 
 ul.tool_bar li a {
@@ -166,7 +171,7 @@ td.buttons button.save {
 }
 
 td.buttons button.save:hover {
-    background-color: rgba(76, 175, 80, 1);
+    background-color: rgb(76, 175, 80);
 }
 
 td.buttons button.cancel {
@@ -320,4 +325,115 @@ a.button:hover {
 	margin:10px 0 10px 20px;
 	padding:0;
 	height:50px;
+}
+
+
+.cf:before, .cf:after{
+    content:"";
+    display:table;
+}
+
+.cf:after{
+    clear:both;
+}
+
+.cf{
+    zoom:1;
+}
+
+/* Form wrapper styling */
+.form-wrapper {
+    width: 540px;
+    padding: 0;
+    margin: 0;
+}
+
+/* Form text input */
+
+.form-wrapper input {
+    width: 430px;
+    height: 20px;
+    padding: 15px 5px;
+    margin: 0;
+    float: left;
+    font: bold 15px 'lucida sans', 'trebuchet MS', 'Tahoma';
+    border: 0;
+    background: #eee;
+    border-radius: 3px 0 0 3px;
+}
+
+.form-wrapper input:focus {
+    outline: 0;
+    background: #fff;
+    box-shadow: 0 0 2px rgba(0,0,0,.8) inset;
+}
+
+.form-wrapper input::-webkit-input-placeholder {
+   color: #999;
+   font-weight: normal;
+   font-style: italic;
+}
+
+.form-wrapper input:-moz-placeholder {
+    color: #999;
+    font-weight: normal;
+    font-style: italic;
+}
+
+.form-wrapper input:-ms-input-placeholder {
+    color: #999;
+    font-weight: normal;
+    font-style: italic;
+}
+
+/* Form submit button */
+.form-wrapper button {
+    overflow: visible;
+    position: relative;
+    float: right;
+    border: 0;
+    padding: 0;
+    cursor: pointer;
+    height: 30px;
+    width: 110px;
+    font: bold 15px/30px 'lucida sans', 'trebuchet MS', 'Tahoma';
+    color: #fff;
+    text-transform: uppercase;
+    background: #4CAF50;
+    border-radius: 0 3px 3px 0;
+    text-shadow: 0 -1px 0 rgba(0, 0 ,0, .3);
+}
+
+.form-wrapper button:hover {
+    background: #58bb59;
+}
+
+.form-wrapper button:active,
+.form-wrapper button:focus {
+    background: #428c43;
+	outline: 0;
+}
+
+.form-wrapper button:before { /* left arrow */
+    content: '';
+    position: absolute;
+    border-width: 8px 8px 8px 0;
+    border-style: solid solid solid none;
+    border-color: transparent #4CAF50 transparent;
+    top: 9px;
+    left: -6px;
+}
+
+.form-wrapper button:hover:before{
+    border-right-color: #58bb59;
+}
+
+.form-wrapper button:focus:before,
+.form-wrapper button:active:before {
+    border-right-color: #428c43;
+}
+
+.form-wrapper button::-moz-focus-inner { /* remove extra button spacing for Mozilla Firefox */
+    border: 0;
+    padding: 0;
 }

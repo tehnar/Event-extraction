@@ -72,10 +72,9 @@ function joinEventsAction(joinEntities1, joinActions, joinEntities2) {
 }
 
 function joinEvents() {
-    if (selected_events.length < 2) {
-        return;
+    if (selected_events.length > 1) {
+        popupMergeDialog();
     }
-    popupMergeDialog();
 }
 
 function updateProgressBar() {

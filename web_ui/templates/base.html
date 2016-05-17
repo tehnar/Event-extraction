@@ -14,6 +14,12 @@
         <li><a href="/events">Events</a></li>
         <li><a href="/sources">Sources</a></li>
         <li><a href="/merge" id="merging">Merging</a></li>
+        <li id="search">
+            <form class="form-wrapper cf">
+                <input type="text" name="pattern" placeholder="Search here..." required>
+                <button type="submit" onclick="search()">Search</button>
+            </form>
+        </li>
     </ul>
 {% endblock %}
 </html>
