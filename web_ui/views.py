@@ -1,3 +1,4 @@
+from urllib.parse import urlparse
 from flask import session, redirect, url_for, render_template, request, jsonify
 from web_ui import app
 from flask.ext.wtf import Form
@@ -278,6 +279,6 @@ def statistics():
     return render_template("merge.html", form=Form())
 
 
-@app.route('/_search_events', methods=['POST'])
+@app.route('/_search_events', methods=['GET'])
 def search_events():
-    return load_events()
+    return redirect(url_for('events', query=request.args['query']))

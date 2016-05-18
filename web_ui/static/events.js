@@ -128,20 +128,6 @@ function saveEvent(id) {
         });
 }
 
-function search() {
-    var query= $("input[name='query']");
-    $.post($SCRIPT_ROOT + '/_search_events', 
-            {query: query.val()}, 
-            function(data) {
-                var table = document.getElementById("events");
-                table.innerHTML = "";
-                var events = data.result;
-                for (var index in events) {
-                    table.innerHTML += drawEventWithButtons(events[index]);
-                }
-            });
-}
-
 function hideRow(id) {
     $('tr#' + id + '.even').toggle();
     var row = $('tbody#' + id);
