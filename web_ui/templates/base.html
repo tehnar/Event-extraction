@@ -15,8 +15,8 @@
         <li><a href="/sources">Sources</a></li>
         <li><a href="/merge" id="merging">Merging</a></li>
         <li id="search">
-            <form action='/_search_events' method=get class="form-wrapper cf">
-                <input type="text" name="query" placeholder="Search here..." required>
+            <form action='/_search_events' method=get class="form-wrapper cf" onSubmit="saveSearchString()">
+                <input id="query" type="text" name="query" placeholder="Search here..." required>
                 <button type="submit">Search</button>
             </form>
         </li>

@@ -2,6 +2,13 @@
  * Created by rebryk on 07/05/16.
  */
 
+document.getElementById("query").value = localStorage.getItem("query");
+
+function saveSearchString() {
+    localStorage.setItem("query", $("#query").val());
+    return true;
+}
+
 function drawEventWithButtons(event) {
     return '<tbody id=' + event.id + ' onmouseenter=mouseOver(' + event.id + ')> <tr class=odd id=' + event.id + '>' + drawEventInnerHtmlWithButtons(event) + '</tr>' +
         '<tr id=' + event.id + ' class=even style=display:none> <td colspan="7"> No same events! </td> </tr> </tbody>';
