@@ -29,7 +29,7 @@ class DatabaseHandler:
             self.clear_db()
 
     def clear_db(self):
-        for table_name in ['articles', 'entities', 'actions', 'events', 'event_sources', 'settings', 'dates']:
+        for table_name in ['articles', 'entities', 'actions', 'events', 'event_sources', 'settings', 'dates', 'actions_sets', 'events_sets', 'entities_sets', 'events_merge']:
             self.cursor.execute("DROP TABLE IF EXISTS {0} CASCADE".format(table_name))
             self.connection.commit()
 
@@ -201,12 +201,30 @@ class DatabaseHandler:
 
     #TODO: check 'del_action' and 'del_entity' (add set update)
 
-    def get_set_by_id(self, table, event_id):
-        self.cursor.execute("""SELECT parent_id FROM """ + table + """ WHERE child_id=%s""", (event_id,))
+    def get_set_by_id(self, table, id):
+        self.cursor.execute("SELECT parent_id FROM " + table + " WHERE child_id=%s", (id,))
         result = self.cursor.fetchone()
         if result is None:
-            return event_id
+            return id
         return result[0]
+
+    def get_set_ids_by_parent_id(self, table, id):
+        self.cursor.execute("SELECT child_id FROM " + table + " WHERE parent_id=%s", (id,))
+        result = self.cursor.fetchall()
+        if len(result) == 0:
+            return [id]
+
+        ids = []
+        for entry in result:
+            ids.append(entry[0])
+        return ids
+
+    def get_set_ids_by_id(self, table, id):
+        id = self.get_set_by_id(table, id)
+        return self.get_set_ids_by_parent_id(table, id)
+
+    def get_events_set_by_id(self, id):
+        return self.get_set_ids_by_id("events_sets", id)
 
     def join(self, table, root_id, ids):
         if len(ids) > 1:
@@ -234,7 +252,7 @@ class DatabaseHandler:
         self.cursor.execute("SELECT child_id FROM " + table + " WHERE parent_id=%s", (event_id,))
         result = self.cursor.fetchall()
         if len(result) > 0:
-            self.cursor.execute("DELETE FROM  + table +  WHERE parent_id=%s", (event_id,))
+            self.cursor.execute("DELETE FROM  " + table +  " WHERE parent_id=%s", (event_id,))
             self.connection.commit()
 
             if table == "entities_sets":
@@ -260,9 +278,6 @@ class DatabaseHandler:
 
     def get_entity_set_by_entity_id(self, entity_id):
         return self.get_set_by_id("entities_sets", entity_id)
-
-    def get_action_set_by_action_id(self, action_id):
-        return self.get_set_by_id("actions_sets", action_id)
 
     def join_entities_by_events(self, ids, mod):
         entities = []

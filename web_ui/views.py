@@ -47,6 +47,17 @@ class FetchArticleForm(Form):
 def redirect_to_events():
     return redirect(url_for('events'))
 
+def get_events_group(id):
+    id = db_handler.get_event_set_for_event_by_id(id)
+    events_ids = db_handler.get_events_set_by_id(id)
+
+    events = [get_extended_event(id)]
+    for event_id in events_ids:
+        if event_id != id:
+            events.append(get_extended_event(event_id))
+
+    return events
+
 def get_extended_event(id):
     event = db_handler.get_event_by_id(id)
     event.pdate = db_handler.get_event_publish_date(id)
@@ -81,7 +92,7 @@ def load_events():
     events = db_handler.get_events_starting_from(event_cnt + DEFAULT_ARTICLES_COUNT, datetime.datetime.now(),
                                                  pattern, site)
 
-    return jsonify(result=[get_extended_event(e.id).json() for e in
+    return jsonify(result=[[x.json() for x in get_events_group(e.id)] for e in
                            events[event_cnt: event_cnt + DEFAULT_ARTICLES_COUNT]])
 
 
@@ -264,7 +275,6 @@ def events():
 
 @app.route('/sources', methods = ['GET', 'POST'])
 def articles():
-    print(request.method)
     articles = db_handler.get_sites()
     articles_forms = [FetchArticleForm(prefix=article[0]) for article in articles]
     for form, article in zip(articles_forms, articles):

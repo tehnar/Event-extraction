@@ -17,6 +17,20 @@ tr {
     margin: 0;
 }
 
+/*
+tr:nth-child(even) {
+    background-color: #FAFAFA;
+}*/
+
+tr.even {
+    font-family: "Trebuchet MS", Arial, Helvetica, sans-serif;
+    font-size: 13px;
+}
+
+tr.odd {
+    background-color: #e4e8fc;
+}
+
 tr.selected {
     background-color: #f4fa88;
 }
@@ -32,10 +46,6 @@ td, td.th {
     padding: 8px;
     min-width: 150px;
     text-align: center;
-}
-
-tr:nth-child(even) {
-    background-color: #FAFAFA;
 }
 
 tbody tr:hover {
@@ -143,8 +153,24 @@ ul.tool_bar li a:hover {
 
 
 td.buttons button {
+    float: right;
+
     width: 90%;
     height: 40px;
+    margin-bottom: 1px;
+    margin-top: 1px;
+
+    font-size: 14px;
+    color: black;
+    text-align: center;
+    background: #E7E7E7;
+    border: 0;
+}
+
+
+tr.even td.buttons button {
+    width: 85%;
+    height: 35px;
     margin-bottom: 1px;
     margin-top: 1px;
 
