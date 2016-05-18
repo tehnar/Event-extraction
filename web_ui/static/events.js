@@ -55,10 +55,20 @@ function modifyEvent(id, type) {
 }
 
 function deleteEvent(id, type) {
+    var replace_id = -1;
+    $('tbody#' + id).find('tr').each(function() {
+        if ($(this).attr('class') == 'even') {
+            replace_id = $(this).attr('id');
+        }
+    });
+
     removeElement(selected_events, id);
-    //$('tbody#' + id).remove();
     $('tr#' + id + '.' + type).remove();
-    $.post($SCRIPT_ROOT + '/_delete_event', {id: id}, function(data) {});
+    $.post($SCRIPT_ROOT + '/_delete_event', {id: id}, function(data) {
+        if (type == 'odd' && replace_id != -1) {
+            updateBlock(id, replace_id);
+        }
+    });
 }
 
 function cancelEvent(id, type) {
@@ -85,10 +95,17 @@ function joinEventsAction(joinEntities1, joinActions, joinEntities2) {
     $.post($SCRIPT_ROOT + '/_join_events',
         {ids: selected_events, joinEntities1: joinEntities1, joinActions: joinActions, joinEntities2: joinEntities2},
         function(data) {
+            var id = selected_events[0];
+
             while (selected_events.length > 0) {
+                 if (selected_events[0] != id) {
+                     $('tbody#' + selected_events[0]).remove();
+                 }
                 clickEvent(selected_events[0], 'odd');
-        }
-    });
+            }
+
+            updateBlock(id, id);
+        });
 }
 
 function joinEvents() {
@@ -133,37 +150,8 @@ function saveEvent(id, type) {
         });
 }
 
-function search(pre_query) {
-    console.log(pre_query);
-
-    var query= $("input[name='query']");
-
-    var query = "";
-    if (pre_query != null) {
-        query = pre_query;
-    }
-
-    $.post($SCRIPT_ROOT + '/_search_events',
-            {query: query.val()}, 
-            function(data) {
-                var table = document.getElementById("events");
-                table.innerHTML = "";
-                var events = data.result;
-                for (var index in events) {
-                    table.innerHTML += drawEventWithButtons(events[index]);
-                }
-            });
-}
-
 function hideRow(id) {
     var row = $('tbody#' + id);
-
-    /*
-    row.find('tr').each(function() {
-        if ($(this).attr('class') == 'even') {
-            $(this).toggle();
-        }
-    });*/
 
     row.off("mouseleave").mouseleave(function() {});
     row.off("mouseenter").mouseenter(function() {
@@ -178,13 +166,6 @@ function expandRow(id) {
     row.off("mouseleave").mouseleave(function() {
         hideRow(id);
     });
-
-    /*
-    row.find('tr').each(function() {
-        if ($(this).attr('class') == 'even') {
-            $(this).toggle();
-        }
-    });*/
 }
 
 function mouseOver(id) {
@@ -196,6 +177,13 @@ function mouseOver(id) {
 
     row.off("mouseleave").mouseleave(function() {
         clearTimeout(timeout);
+    });
+}
+
+function updateBlock(id, new_id) {
+    $.post($SCRIPT_ROOT + '/_get_group', {id: new_id}, function(data) {
+        var events = data.result;
+        $('tbody#' + id).replaceWith(drawEventWithButtons(events));
     });
 }
 

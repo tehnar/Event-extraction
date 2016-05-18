@@ -9,7 +9,7 @@ table.table {
 }
 
 tr {
-    display:table-row;
+    display: table-row;
     font-family: "Trebuchet MS", Arial, Helvetica, sans-serif;
     font-size: 15px;
     border: 0 solid #DDD;

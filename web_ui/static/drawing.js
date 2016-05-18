@@ -5,13 +5,8 @@
 function drawEventWithButtons(events) {
     var event = events[0];
     var html = '<tbody id=' + event.id + ' onmouseenter=mouseOver(' + event.id + ')> <tr class=odd id=' + event.id + '>' + drawEventInnerHtmlWithButtons(event, 'odd') + '</tr>';
-    if (events.length == 1) {
-        //style=display:none
-        //html += '<tr id=' + event.id + ' class=even> <td colspan="7"> No same events! </td></tr>';
-    } else {
-        for (var i = 1; i < events.length; ++i) {
-            html += '<tr id=' + events[i].id + ' class=even>' + drawEventInnerHtmlWithButtons(events[i], 'even') + '</tr>';
-        }
+    for (var i = 1; i < events.length; ++i) {
+        html += '<tr id=' + events[i].id + ' class=even>' + drawEventInnerHtmlWithButtons(events[i], 'even') + '</tr>';
     }
     html += '</tbody>';
     return html;
@@ -25,6 +20,10 @@ function updateMergingButton() {
         }
         document.getElementById("merging").textContent = text;
     });
+}
+
+function searchText(text) {
+    $('#search_button').attr('text', text);
 }
 
 function getHighlightedSentence(event) {
@@ -42,7 +41,7 @@ function getHighlightedSentence(event) {
             for (var word in words) {
                 if (words[word] == data[key][i]) {
                     if (key == 0) {
-                        words[word] = '<a class="' + colors[key] + '" onclick=search("' + words[word] + '")>' + words[word] + '</a>';
+                        words[word] = '<a class="' + colors[key] + '" onclick=searchText("' + words[word] + '")>' + words[word] + '</a>';
                     } else {
                         words[word] = '<span class="' + colors[key] + '">' + words[word] + '</span>';
                     }
@@ -64,7 +63,7 @@ function getHighlightedSentence(event) {
     return result;
 }
 
-function drawEventInnerHtmlWithoutButtons(event, type) {
+function  drawEventInnerHtmlWithoutButtons(event, type) {
     var html = '<td ondblclick=clickEvent(' + event.id + ',"' + type + '")>' + event['pdate'] + '</td>';
     var keys = ["entity1", "action", "entity2"];
     for (key in keys) {

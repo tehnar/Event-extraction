@@ -1,3 +1,4 @@
+from urllib.parse import urlparse
 from flask import session, redirect, url_for, render_template, request, jsonify
 from web_ui import app
 from flask.ext.wtf import Form
@@ -38,7 +39,6 @@ class EventsForm(Form):
     entity2 = TextAreaField()
     date = TextAreaField()
     sentence = TextAreaField()
-
 
 class FetchArticleForm(Form):
     fetch_articles = SubmitField('Fetch new articles')
@@ -123,12 +123,17 @@ def get_event_by_id():
     id = request.form.get('id', 0, type=int)
     return jsonify(result=get_extended_event(id).json())
 
+@app.route('/_get_group', methods=['POST'])
+def get_group_by_id():
+    id = request.form.get('id', 0, type=int)
+    return jsonify(result=[x.json() for x in get_events_group(id)])
+
 @app.route('/_join_events_merge', methods=['POST'])
 def join_events_merge():
     id = request.form.get('id', 0, type=int)
-    join_entities1 = request.form.get('joinEntities1', 0, type=bool)
-    join_actions = request.form.get('joinActions', 0, type=bool)
-    join_entities2 = request.form.get('joinEntities2', 0, type=bool)
+    join_entities1 = request.form.get('joinEntities1', "", type=str) == 'true'
+    join_actions = request.form.get('joinActions', "", type=str) == 'true'
+    join_entities2 = request.form.get('joinEntities2', "", type=str) == 'true'
 
     ids = db_handler.get_event_merge_by_id(id)
     db_handler.join_events(ids)
@@ -149,9 +154,9 @@ def join_events_merge():
 @app.route('/_join_events', methods=['POST'])
 def join_events():
     ids = request.form.getlist('ids[]')
-    join_entities1 = request.form.get('joinEntities1', 0, type=bool)
-    join_actions = request.form.get('joinActions', 0, type=bool)
-    join_entities2 = request.form.get('joinEntities2', 0, type=bool)
+    join_entities1 = request.form.get('joinEntities1', "", type=str) == 'true'
+    join_actions = request.form.get('joinActions', "", type=str) == 'true'
+    join_entities2 = request.form.get('joinEntities2', "", type=str) == 'true'
 
     db_handler.join_events(ids)
 
@@ -288,6 +293,6 @@ def statistics():
     return render_template("merge.html", form=Form())
 
 
-@app.route('/_search_events', methods=['POST'])
+@app.route('/_search_events', methods=['GET'])
 def search_events():
-    return load_events()
+    return redirect(url_for('events', query=request.args['query']))
