@@ -27,6 +27,7 @@ class BlogsDownloader:
                     print("Failed to download article:", article.url)
                     continue
                 article.parse()
+                article.nlp()
                 publish_date = article.publish_date
                 if publish_date is None and url.split('.')[1] == 'jetbrains':
                     soup = BeautifulSoup(requests.get(article.url).content, 'html.parser')
