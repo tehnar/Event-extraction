@@ -12,6 +12,13 @@ function drawEventWithButtons(events) {
     return html;
 }
 
+document.getElementById("query").value = localStorage.getItem("query");
+
+function saveSearchString() {
+    localStorage.setItem("query", $("#query").val());
+    return true;
+}
+
 function updateMergingButton() {
     $.post($SCRIPT_ROOT + '/_get_events_merge_count', {}, function(data) {
         var text = "Merging";
@@ -23,7 +30,8 @@ function updateMergingButton() {
 }
 
 function searchText(text) {
-    $('#search_button').attr('text', text);
+    $('#query').val(text);
+    $('#search_button').click();
 }
 
 function getHighlightedSentence(event) {
@@ -40,11 +48,7 @@ function getHighlightedSentence(event) {
         for (var i in data[key]) {
             for (var word in words) {
                 if (words[word] == data[key][i]) {
-                    if (key == 0) {
-                        words[word] = '<a class="' + colors[key] + '" onclick=searchText("' + words[word] + '")>' + words[word] + '</a>';
-                    } else {
-                        words[word] = '<span class="' + colors[key] + '">' + words[word] + '</span>';
-                    }
+                    words[word] = '<span class="' + colors[key] + '" onclick=searchText("' + words[word] + '")>' + words[word] + '</span>';
                     break;
                 }
             }

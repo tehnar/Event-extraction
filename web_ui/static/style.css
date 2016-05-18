@@ -213,18 +213,21 @@ span.red {
     color: red;
     font-style: italic;
     font-weight: bold;
+    cursor: default;
 }
 
 span.green {
     color: darkgreen;
     font-style: italic;
     font-weight: bold;
+    cursor: default;
 }
 
 span.blue {
     color: blue;
     font-style: italic;
     font-weight: bold;
+    cursor: default;
 }
 
 progress::-webkit-progress-value { background: yellow; }
