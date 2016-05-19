@@ -2,6 +2,8 @@ import configparser
 import psycopg2
 from data_mining.article import Article
 from event import Event
+from datetime import datetime
+
 
 class DatabaseHandler:
     _CONFIG_NAME = 'config.cfg'
@@ -29,7 +31,8 @@ class DatabaseHandler:
             self.clear_db()
 
     def clear_db(self):
-        for table_name in ['articles', 'entities', 'actions', 'events', 'event_sources', 'settings', 'dates']:
+        for table_name in ['articles', 'entities', 'actions', 'events', 'event_sources', 'settings', 'dates',
+                           'entities_sets', 'actions_sets', 'events_merge', 'events_sets']:
             self.cursor.execute("DROP TABLE IF EXISTS {0} CASCADE".format(table_name))
             self.connection.commit()
 
@@ -41,11 +44,11 @@ class DatabaseHandler:
         self.cursor.execute("INSERT INTO settings (version) VALUES (%s)", (DatabaseHandler._VERSION,))
         self.connection.commit()
 
-    def get_article_id(self, article):
+    def get_article_id(self, article) -> (int,):
         self.cursor.execute("SELECT id FROM articles WHERE url=(%s)", (article.url,))
         return self.cursor.fetchone()
 
-    def add_article_or_get_id(self, article):
+    def add_article_or_get_id(self, article: Article) -> int:
         article_id = self.get_article_id(article)
         if article_id is None:
             self.cursor.execute("""INSERT INTO articles (plain_text, raw_text, publish_date, site_name, url, annotation,
@@ -57,7 +60,7 @@ class DatabaseHandler:
         else:
             return article_id[0]
 
-    def add_entity_or_get_id(self, entity_name):
+    def add_entity_or_get_id(self, entity_name: str) -> int:
         self.cursor.execute("SELECT id FROM entities WHERE entity_name=(%s)", (entity_name,))
         entity_id = self.cursor.fetchone()
         if entity_id is None:
@@ -67,7 +70,7 @@ class DatabaseHandler:
         else:
             return entity_id[0]
 
-    def add_action_or_get_id(self, action_name):
+    def add_action_or_get_id(self, action_name: str) -> int:
         self.cursor.execute("SELECT id FROM actions WHERE action_name=(%s)", (action_name,))
         action_id = self.cursor.fetchone()
         if action_id is None:
@@ -77,8 +80,7 @@ class DatabaseHandler:
         else:
             return action_id[0]
 
-    def add_date_or_get_id(self, date):
-        date = date
+    def add_date_or_get_id(self, date: str or datetime) -> int:
         self.cursor.execute("SELECT id FROM dates WHERE date=(%s)", (date,))
 
         date_id = self.cursor.fetchone()
@@ -89,7 +91,7 @@ class DatabaseHandler:
         else:
             return date_id[0]
 
-    def add_event_or_get_id(self, event, article):
+    def add_event_or_get_id(self, event: Event, article: Article) -> int:
         entity1_id = self.add_entity_or_get_id(event.entity1)
         action_id = self.add_action_or_get_id(event.action)
         entity2_id = self.add_entity_or_get_id(event.entity2)
@@ -113,7 +115,7 @@ class DatabaseHandler:
             event_id = event_id[0]
         return event_id
 
-    def del_event_by_id(self, event_id):
+    def del_event_by_id(self, event_id: int) -> int:
         #update sets
         self.del_event_from_set(event_id)
 
@@ -123,9 +125,9 @@ class DatabaseHandler:
         self.connection.commit()
         # TODO: remove needless articles
 
-    def get_events_starting_from(self, count, start_date, pattern, site_name):
+    def get_events_starting_from(self, count: int, start_date: str or datetime,
+                                 pattern: str, site_name: str) -> [Event]:
         pattern = '%' + '%'.join(pattern.split('+')) + '%'
-        print(pattern, site_name)
         self.cursor.execute("""SELECT event.id, entity1.entity_name, entity2.entity_name, action.action_name,
         event.sentence, date.date
         FROM events event
@@ -149,12 +151,12 @@ class DatabaseHandler:
                                 id=raw_event[0]))
         return events
 
-    def get_sites(self):
+    def get_sites(self) -> [str]:
         self.cursor.execute("""SELECT article.site_name, MAX(article.publish_date) FROM articles article
         WHERE article.publish_date IS NOT NULL GROUP BY article.site_name""")
         return self.cursor.fetchall()
 
-    def get_event_by_id(self, event_id):
+    def get_event_by_id(self, event_id: int) -> Event:
         self.cursor.execute("""SELECT event.id, entity1.entity_name, entity2.entity_name, action.action_name,
         event.sentence, date.date
         FROM events event
@@ -173,14 +175,14 @@ class DatabaseHandler:
                      raw_event[5],
                      id=raw_event[0])
 
-    def get_event_publish_date(self, event_id):
+    def get_event_publish_date(self, event_id: int) -> datetime:
         self.cursor.execute("""SELECT article.publish_date FROM events event
         INNER JOIN event_sources source ON source.event_id = event.id
         INNER JOIN articles article ON article.id = source.source_id
         WHERE event.id = %s""", (event_id,))
         return self.cursor.fetchone()[0]
 
-    def get_event_source(self, event_id):
+    def get_event_source(self, event_id: int) -> Article:
         self.cursor.execute("""SELECT article.raw_text, article.caption, article.annotation, article.plain_text,
         article.url, article.author, article.publish_date
         FROM events event
@@ -190,7 +192,7 @@ class DatabaseHandler:
         article = self.cursor.fetchone()
         return Article(article[0], article[1], article[2], article[3], "", article[4], article[5], article[6])
 
-    def change_event(self, event_id, new_event):
+    def change_event(self, event_id: int, new_event: Event):
         id1 = self.add_entity_or_get_id(new_event.entity1)
         id2 = self.add_entity_or_get_id(new_event.entity2)
         action_id = self.add_action_or_get_id(new_event.action)
@@ -201,23 +203,23 @@ class DatabaseHandler:
 
     #TODO: check 'del_action' and 'del_entity' (add set update)
 
-    def get_set_by_id(self, table, event_id):
+    def get_set_by_id(self, table: str, event_id: int) -> int:
         self.cursor.execute("""SELECT parent_id FROM """ + table + """ WHERE child_id=%s""", (event_id,))
         result = self.cursor.fetchone()
         if result is None:
             return event_id
         return result[0]
 
-    def join(self, table, root_id, ids):
+    def join(self, table: str, root_id: int, ids: [int]):
         if len(ids) > 1:
             for id in ids:
                 self.join_two(table, id, root_id)
 
-    def get_entity_len(self, id):
+    def get_entity_len(self, id: int) -> int:
         self.cursor.execute("SELECT entity_name FROM entities WHERE id = %s", (id,))
         return len(self.cursor.fetchone()[0])
 
-    def join_two(self, table, event1_id, event2_id):
+    def join_two(self, table: str, event1_id: int, event2_id: int):
         event1_id = self.get_set_by_id(table, event1_id)
         event2_id = self.get_set_by_id(table, event2_id)
 
@@ -230,7 +232,7 @@ class DatabaseHandler:
             self.cursor.execute("UPDATE " + table + " SET parent_id=%s WHERE parent_id=%s", (event2_id, event1_id))
             self.connection.commit()
 
-    def del_from_set(self, table, event_id):
+    def del_from_set(self, table: str, event_id: int):
         self.cursor.execute("SELECT child_id FROM " + table + " WHERE parent_id=%s", (event_id,))
         result = self.cursor.fetchall()
         if len(result) > 0:
@@ -249,22 +251,22 @@ class DatabaseHandler:
             self.cursor.execute("DELETE FROM " + table + " WHERE child_id=%s", (event_id,))
             self.connection.commit()
 
-    def get_event_set_for_event_by_id(self, event_id):
+    def get_event_set_for_event_by_id(self, event_id: int) -> int:
         return self.get_set_by_id("events_sets", event_id)
 
-    def join_events(self, ids):
+    def join_events(self, ids: [int]) -> int:
         self.join("events_sets", ids[0], ids)
 
-    def del_event_from_set(self, event_id):
+    def del_event_from_set(self, event_id : int):
         self.del_from_set("events_sets", event_id)
 
-    def get_entity_set_by_entity_id(self, entity_id):
+    def get_entity_set_by_entity_id(self, entity_id: int) -> int:
         return self.get_set_by_id("entities_sets", entity_id)
 
-    def get_action_set_by_action_id(self, action_id):
+    def get_action_set_by_action_id(self, action_id: int) -> int:
         return self.get_set_by_id("actions_sets", action_id)
 
-    def join_entities_by_events(self, ids, mod):
+    def join_entities_by_events(self, ids: [int], mod: str):
         entities = []
         for id in ids:
             self.cursor.execute("""SELECT entity""" + mod + """ FROM events WHERE id=%s""", (id,))
@@ -275,13 +277,13 @@ class DatabaseHandler:
         self.join("entities_sets", min(entities, key=lambda pair: len(pair[1]))[0],
                   list(map(lambda pair: pair[0], entities)))
 
-    def del_entity_from_set(self, event_id):
+    def del_entity_from_set(self, event_id: int) -> int:
         self.del_from_set("entities_sets", event_id)
 
-    def get_action_set_by_action_id(self, action_id):
+    def get_action_set_by_action_id(self, action_id: int) -> int:
         return self.get_set_by_id("actions_sets", action_id)
 
-    def join_actions_by_events(self, ids):
+    def join_actions_by_events(self, ids: [int]):
         actions = []
         for id in ids:
             self.cursor.execute("""SELECT action FROM events WHERE id=%s""", (id,))
@@ -292,31 +294,31 @@ class DatabaseHandler:
         self.join("actions_sets", min(actions, key=lambda pair: len(pair[1]))[0],
                   list(map(lambda pair: pair[0], actions)))
 
-    def del_action_from_set(self, event_id):
+    def del_action_from_set(self, event_id: int):
         self.del_from_set("actions_sets", event_id)
 
     #TODO: fix it
-    def process_string(self, text):
+    def process_string(self, text: str) -> str:
         text = ' '.join(text.split())
         text = text.replace(" ’s", "’s")
         text = text.replace("'ll", "will")
         text = text.replace("'ve", "have")
         return text
 
-    def get_entity_by_id(self, id):
+    def get_entity_by_id(self, id: int) -> str:
         self.cursor.execute("SELECT entity_name FROM entities WHERE id=%s", (id,))
         return self.cursor.fetchone()[0]
 
-    def get_action_by_id(self, id):
+    def get_action_by_id(self, id: int) -> str:
         self.cursor.execute("SELECT action_name FROM actions WHERE id=%s", (id,))
         return self.cursor.fetchone()[0]
 
-    def get_entity_core_id_by_event_id(self, id):
+    def get_entity_core_id_by_event_id(self, id: int) -> (int, int, int):
         self.cursor.execute("SELECT entity1, action, entity2 FROM events WHERE id=%s", (id,))
         event_data = self.cursor.fetchone()
         return event_data[0], event_data[1], event_data[2]
 
-    def get_event_ids_from(self, from_id=0):
+    def get_event_ids_from(self, from_id: int =0) -> [int]:
         self.cursor.execute("SELECT id FROM events WHERE id>=%s ORDER BY id", (from_id,))
         ids = []
 
@@ -325,7 +327,7 @@ class DatabaseHandler:
                 ids.append(id[0])
         return ids
 
-    def get_event_ids_to(self, to_id=0):
+    def get_event_ids_to(self, to_id: int =0) -> [int]:
         self.cursor.execute("SELECT id FROM events WHERE id<=%s ORDER BY id", (to_id,))
         ids = []
         if self.cursor.rowcount > 1:
@@ -333,11 +335,11 @@ class DatabaseHandler:
                 ids.append(id[0])
         return ids
 
-    def add_events_to_events_merge(self, id1, id2):
+    def add_events_to_events_merge(self, id1: int, id2: int):
         self.cursor.execute("INSERT INTO events_merge (event1_id, event2_id) VALUES (%s, %s)", (id1, id2))
         self.connection.commit()
 
-    def get_events_merge(self):
+    def get_events_merge(self) -> [(int, int, int)]:
         self.cursor.execute("SELECT id, event1_id, event2_id FROM events_merge")
         data = []
 
@@ -346,20 +348,20 @@ class DatabaseHandler:
                 data.append((entry[0], entry[1], entry[2]))
         return data
 
-    def get_event_merge_by_id(self, id):
+    def get_event_merge_by_id(self, id: int) -> (int, int):
         self.cursor.execute("SELECT event1_id, event2_id FROM events_merge WHERE id=%s", (id,))
         data = self.cursor.fetchone()
         return (data[0], data[1])
 
-    def del_event_merge_by_id(self, id):
+    def del_event_merge_by_id(self, id: int):
         self.cursor.execute("DELETE FROM events_merge WHERE id=%s", (id,))
         self.connection.commit()
 
-    def get_articles(self):
+    def get_articles(self) -> [Article]:
         self.cursor.execute("SELECT * FROM articles")
         return list(map(lambda t: Article(t[2], t[8], t[6], t[1], "blog.jetbrains.com", t[5], t[7], t[3]), self.cursor.fetchall()))
 
-    def get_main_entity_core_by_event_id(self, id):
+    def get_main_entity_core_by_event_id(self, id: int) -> (int, int, int):
         entity1, action, entity2 = self.get_entity_core_id_by_event_id(id)
         entity1 = self.get_entity_set_by_entity_id(entity1)
         action = self.get_action_set_by_action_id(action)
