@@ -1,26 +1,30 @@
-from itertools import *
+import re
 import types
+from itertools import *
+
 import spacy.tokens
+import sys
 from spacy.en import English
-from data_mining import article_downloaders, Article
+
+from data_mining.downloaders import article_downloaders
 from db.db_handler import DatabaseHandler
 from event import Event
-import re
+
 
 class SpacyEventExtractor:
     _nlp = English()
     _keywords = list(map(lambda s: s.strip().lower(), open('keywords.txt', 'r').readlines()))
     _known_phrases = [('is out', 'released'), ('is here', 'released'), ('is there', 'released'),
-                      ('is out', 'released'), ('is open', 'started'), ('is available', 'released')
+                      ('is out', 'released'), ('is open', 'started'), ('is available', 'released'),
+                      ('please welcome', 'we released')
                      ]
     _important_actions = ['release', 'start', 'publish', 'announce', 'update']
-    _known_abbreviations = [('RC', 'release candidate'), ('EAP', 'early access program')]
 
     def __init__(self):
         pass
 
     @staticmethod
-    def _get_tree(root: spacy.tokens.Token, depth: int, good_token: types.LambdaType) -> spacy.tokens.Token:
+    def _get_tree(root: spacy.tokens.Token, depth: int, good_token: types.LambdaType) -> [spacy.tokens.Token]:
         if depth == 0:
             return [root] if good_token(root) else []
         result = []
@@ -76,17 +80,22 @@ class SpacyEventExtractor:
         for word in prep.children:
             if word.dep_ in ["pobj", "pcomp"]:
                 chunk_str, chunk_head = SpacyEventExtractor._get_chunk(word)
-                return str(prep) + chunk_str, chunk_head
+                return str(prep) + " " + chunk_str, chunk_head
 
         return "", None
 
     @staticmethod
-    def extract(text: str, replace_we: str = None) -> list:
+    def _remove_extra_whitespaces(text):
+        return ' '.join(text.strip().split())
+
+    @staticmethod
+    def extract(text: str, replace_we: str = None) -> [Event]:
         text = ' '.join(text.split())  # remove any extra whitespaces
         for aux, replace_with in [('ve', 'have'), ('re', 'are')]:
             text = text.replace("'" + aux, " " + replace_with).replace("’" + aux, " " + replace_with)
             # just because sometimes spaCy fails on sth like we've
-        for abbr, full in SpacyEventExtractor._known_abbreviations + SpacyEventExtractor._known_phrases:
+
+        for abbr, full in SpacyEventExtractor._known_phrases:
             reg = re.compile(abbr, re.IGNORECASE)
             text = reg.sub(full, text)
         events = []
@@ -134,7 +143,7 @@ class SpacyEventExtractor:
             for entity, entity_string in [(entity1, entity1_string), (entity2, entity2_string)]:
                 entity = SpacyEventExtractor._get_prep_with_word(entity)
                 while entity[1] is not None:
-                    entity_string += entity[0]
+                    entity_string += " " + entity[0]
                     entity = SpacyEventExtractor._get_prep_with_word(entity[1])
                 entities.append(entity_string)
             entity1_string, entity2_string = entities
@@ -163,12 +172,15 @@ class SpacyEventExtractor:
             entity1_string, entity2_string = entities_strings
 
             if verb.lemma_.lower() not in SpacyEventExtractor._important_actions and entity2_string == "":
-                continue  # Entity2 can be empty only in some special cases: IDEA 2.0 released
-            events.append(Event(str(entity1_string), str(entity2_string), str(aux_verbs) + str(verb), str(sentence)))
+                continue  # Entity2 can be empty only in some special cases like: IDEA 2.0 released
+            entity1_string = SpacyEventExtractor._remove_extra_whitespaces(entity1_string)
+            entity2_string = SpacyEventExtractor._remove_extra_whitespaces(entity2_string)
+            action_string = SpacyEventExtractor._remove_extra_whitespaces(str(aux_verbs) + ' ' + str(verb))
+            events.append(Event(entity1_string, entity2_string, action_string, str(sentence)))
 
             print(sentence)
             print('Object: ', entity1_string)
-            print('Action: ', str(aux_verbs) + str(verb))
+            print('Action: ', action_string)
             print('Subject: ', entity2_string)
             print("=======")
 
@@ -178,29 +190,34 @@ class SpacyEventExtractor:
 def main():
     db_handler = DatabaseHandler()
 
-    #for sent in open('samples.txt', 'r').read  lines():
-    #    SpacyEventExtractor.extract(sent)
-    #exit()
+    if 'clear_db' in sys.argv:
+        db_handler.clear_db()
 
-    db_handler.clear_db()
+    if 'clear_events' in sys.argv:
+        db_handler.cursor.execute("DELETE FROM event_sources")
+        db_handler.cursor.execute("DELETE FROM events")
+        db_handler.connection.commit()
 
     for downloader in article_downloaders:
-        cnt = 1
         try:
-            for article in islice(downloader.get_articles(), 0, 1600):
-                events = SpacyEventExtractor.extract(article.summary, article.site_owner)
-                #events += SpacyEventExtractor.extract(article.text, article.site_owner)
-                events += SpacyEventExtractor.extract(article.header, article.site_owner)
-
-                if db_handler.get_article_id(article) is not None:
-                    continue
-                for event in events:
-                    print(db_handler.add_event_or_get_id(event, article), article.url)
-                print(cnt)
-                cnt += 1
+            for article in islice(downloader.get_articles(), 0, 1000):
+                print(db_handler.add_article_or_get_id(article))
         except:
             import traceback
             print(traceback.format_exc())
+
+    cnt = 1
+    for article in db_handler.get_articles():
+        print(article.url)
+        events = SpacyEventExtractor.extract(article.summary, article.site_owner)
+        # probably do not need to parse the whole text?
+        # events += SpacyEventExtractor.extract(article.text, article.site_owner)
+        events += SpacyEventExtractor.extract(article.header, article.site_owner)
+
+        for event in events:
+            print(db_handler.add_event_or_get_id(event, article), article.url)
+        print(cnt)
+        cnt += 1
 
 if __name__ == '__main__':
     main()
