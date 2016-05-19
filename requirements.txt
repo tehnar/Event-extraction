@@ -7,3 +7,4 @@ beautifulsoup4>=4.4.1
 editdistance>=0.3.1
 numpy>=1.11
 spacy>=0.100.6
+newspaper3k>=0.1.7
