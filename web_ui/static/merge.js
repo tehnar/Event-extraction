@@ -19,7 +19,7 @@ function joinEventsMergeAction(id, joinEntities1, joinActions, joinEntities2) {
     $('tbody#' + id).remove();
     $.post($SCRIPT_ROOT + '/_join_events_merge',
         {id: id, joinEntities1: joinEntities1, joinActions: joinActions, joinEntities2: joinEntities2},
-        function(data) {
+        function() {
             updateMergingButton();
         });
 }

@@ -44,7 +44,7 @@ function getHighlightedSentence(event) {
         data[key] = event[keys[key]].split(" ");
     }
 
-    for (var key in keys) {
+    for (key in keys) {
         for (var i in data[key]) {
             for (var word in words) {
                 if (words[word] == data[key][i]) {
@@ -57,7 +57,7 @@ function getHighlightedSentence(event) {
 
     var result = "";
     var skipSpace = true;
-    for (var i = 0; i < words.length; ++i) {
+    for (i = 0; i < words.length; ++i) {
         if (!skipSpace && !(/^[\/.,'’”:;^!?%+)\]\}]/.test(words[i]))) {
             result += " ";
         }
@@ -100,10 +100,6 @@ function drawEditEventInnerHtmlWithButtons(event, type) {
     html += '<button class="cancel" onclick=cancelEvent(' + event.id + ',"' + type + '")>Cancel</button>';
     html += '</td>';
     return html;
-}
-
-function drawEventWithoutButtons(event) {
-    return '<tr class=odd id=' + event.id + '>' + drawEventInnerHtmlWithoutButtons(event) + '</tr>';
 }
 
 function drawEventsMerge(id, event1, event2) {

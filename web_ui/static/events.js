@@ -17,7 +17,6 @@ function getUrlParameter(sParam) {
 
     for (i = 0; i < sURLVariables.length; i++) {
         sParameterName = sURLVariables[i].split('=');
-
         if (sParameterName[0] === sParam) {
             return sParameterName[1] === undefined ? true : sParameterName[1];
         }
@@ -41,7 +40,6 @@ function removeElement(array, e) {
 }
 
 var selected_events = [];
-
 var progressTimer = null;
 
 updateMergingButton();
@@ -94,16 +92,14 @@ function clickEvent(id, type) {
 function joinEventsAction(joinEntities1, joinActions, joinEntities2) {
     $.post($SCRIPT_ROOT + '/_join_events',
         {ids: selected_events, joinEntities1: joinEntities1, joinActions: joinActions, joinEntities2: joinEntities2},
-        function(data) {
+        function() {
             var id = selected_events[0];
-
             while (selected_events.length > 0) {
                  if (selected_events[0] != id) {
                      $('tbody#' + selected_events[0]).remove();
                  }
                 clickEvent(selected_events[0], 'odd');
             }
-
             updateBlock(id, id);
         });
 }
@@ -152,7 +148,6 @@ function saveEvent(id, type) {
 
 function hideRow(id) {
     var row = $('tbody#' + id);
-
     row.off("mouseleave").mouseleave(function() {});
     row.off("mouseenter").mouseenter(function() {
         mouseOver(id);

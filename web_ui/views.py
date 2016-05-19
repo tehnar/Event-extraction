@@ -149,7 +149,7 @@ def join_events_merge():
 
     db_handler.del_event_merge_by_id(id)
 
-    return jsonify(result=None)
+    return jsonify()
 
 @app.route('/_join_events', methods=['POST'])
 def join_events():
@@ -169,7 +169,7 @@ def join_events():
     if join_entities2:
         db_handler.join_entities_by_events(ids, "2")
 
-    return jsonify(result=None)
+    return jsonify()
 
 
 def check_phrase(phrase, sentence):
