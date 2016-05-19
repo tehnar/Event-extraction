@@ -3,9 +3,9 @@ from newspaper import Article as NewspaperArticle
 from data_mining.article import Article as DataMiningArticle
 import re
 import configparser
+from .article_downloader import ArticleDownloader
 
-
-class TwitterDownloader():
+class TwitterDownloader(ArticleDownloader):
     _CONFIG_NAME = 'config.cfg'
 
     @staticmethod

@@ -5,9 +5,9 @@ import requests
 from bs4 import BeautifulSoup
 
 from data_mining.article import Article
+from .article_downloader import ArticleDownloader
 
-
-class DevAndEconomicsDownloader():
+class DevAndEconomicsDownloader(ArticleDownloader):
     SITE_ADDRESS = 'http://www.developereconomics.com'
 
     ARTICLES_PER_PAGE = 200

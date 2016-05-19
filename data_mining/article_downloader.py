@@ -1,8 +1,0 @@
-from data_mining.developerandeconomics import DevAndEconomicsDownloader
-from data_mining.infoworld import InfoworldDownloader
-from data_mining.slashdot import SlashdotDownloader
-from data_mining.itnews import ItNewsDownloader
-from data_mining.twitter_list import TwitterDownloader
-from data_mining.blogs_parser import BlogsDownloader
-
-downloaders = [BlogsDownloader, TwitterDownloader, DevAndEconomicsDownloader, InfoworldDownloader, SlashdotDownloader, ItNewsDownloader]

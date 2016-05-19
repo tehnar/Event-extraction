@@ -5,9 +5,10 @@ import os
 import newspaper
 import newspaper.settings
 from bs4 import BeautifulSoup
+from .article_downloader import ArticleDownloader
 
 
-class BlogsDownloader:
+class BlogsDownloader(ArticleDownloader):
     @staticmethod
     def get_articles():
         for url in open('blogs.txt', 'r').readlines():

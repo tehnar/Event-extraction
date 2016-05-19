@@ -5,9 +5,9 @@ from bs4 import BeautifulSoup
 from dateutil import parser as date_parser
 
 from data_mining.article import Article
+from .article_downloader import ArticleDownloader
 
-
-class ItNewsDownloader():
+class ItNewsDownloader(ArticleDownloader):
     SITE_ADDRESS = 'http://www.itnews.com/'
     ARTICLES_PER_PAGE = 200
 

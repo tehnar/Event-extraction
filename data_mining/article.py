@@ -1,3 +1,5 @@
+from newspaper import Article as NewspaperArticle
+
 _known_sites = {'jetbrains.com': 'JetBrains',
                 'microsoft.com': 'Microsoft',
                 'apple.com': 'Apple',

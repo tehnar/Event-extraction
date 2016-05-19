@@ -5,9 +5,9 @@ import requests
 from bs4 import BeautifulSoup
 
 from data_mining.article import Article
+from .article_downloader import ArticleDownloader
 
-
-class SlashdotDownloader():
+class SlashdotDownloader(ArticleDownloader):
     SITE_ADDRESS = 'http://slashdot.org/'
     ARTICLES_PER_PAGE = 15
 
