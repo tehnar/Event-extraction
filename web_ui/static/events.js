@@ -41,49 +41,71 @@ function removeElement(array, e) {
 }
 
 var selected_events = [];
+
 var progressTimer = null;
 
 updateMergingButton();
 loadEvents();
 fullAutoMerge();
 
-function modifyEvent(id) {
+function modifyEvent(id, type) {
     $.post($SCRIPT_ROOT + '/_get_event', {id: id}, function(data) {
-        $('tr#' + id + '.odd').html(drawEditEventInnerHtmlWithButtons(data.result));
+        $('tr#' + id + '.' + type).html(drawEditEventInnerHtmlWithButtons(data.result, type));
     });
 }
 
-function deleteEvent(id) {
-    removeElement(selected_events, id);1
-    $('tbody#' + id).remove();
-    $.post($SCRIPT_ROOT + '/_delete_event', {id: id}, function(data) {});
-}
+function deleteEvent(id, type) {
+    var replace_id = -1;
+    $('tbody#' + id).find('tr').each(function() {
+        if ($(this).attr('class') == 'even') {
+            replace_id = $(this).attr('id');
+        }
+    });
 
-function cancelEvent(id) {
-    $.post($SCRIPT_ROOT + '/_get_event', {id: id}, function(data) {
-        $('tr#' + id + '.odd').html(drawEventInnerHtmlWithButtons(data.result));
+    removeElement(selected_events, id);
+    $('tr#' + id + '.' + type).remove();
+    $.post($SCRIPT_ROOT + '/_delete_event', {id: id}, function(data) {
+        if (type == 'odd' && replace_id != -1) {
+            updateBlock(id, replace_id);
+        }
     });
 }
 
-function clickEvent(id) {
+function cancelEvent(id, type) {
+    $.post($SCRIPT_ROOT + '/_get_event', {id: id}, function(data) {
+        $('tr#' + id + '.' + type).html(drawEventInnerHtmlWithButtons(data.result, type));
+    });
+}
+
+function clickEvent(id, type) {
+    if (type == 'even') {
+        return;
+    }
     var index = find(selected_events, id);
     if (index != -1) {
         remove(selected_events, index);
-        cancelEvent(id);
+        cancelEvent(id, type);
     } else {
         selected_events.push(id);
     }
-    $('tr#' + id + '.odd').toggleClass("selected");
+    $('tr#' + id + '.' + type).toggleClass("selected");
 }
 
 function joinEventsAction(joinEntities1, joinActions, joinEntities2) {
     $.post($SCRIPT_ROOT + '/_join_events',
         {ids: selected_events, joinEntities1: joinEntities1, joinActions: joinActions, joinEntities2: joinEntities2},
         function(data) {
+            var id = selected_events[0];
+
             while (selected_events.length > 0) {
-                clickEvent(selected_events[0]);
-        }
-    });
+                 if (selected_events[0] != id) {
+                     $('tbody#' + selected_events[0]).remove();
+                 }
+                clickEvent(selected_events[0], 'odd');
+            }
+
+            updateBlock(id, id);
+        });
 }
 
 function joinEvents() {
@@ -110,8 +132,8 @@ function fullAutoMerge() {
     $.post($SCRIPT_ROOT + '/_auto_merge', {}, function (data) {});
 }
 
-function saveEvent(id) {
-    var event = $('tr#' + id + '.odd');
+function saveEvent(id, type) {
+    var event = $('tr#' + id + '.' + type);
     var children = event.children();
     var entity1 = children[1].firstChild.value;
     var action = children[2].firstChild.value;
@@ -121,7 +143,7 @@ function saveEvent(id) {
         {id: id, entity1: entity1, action: action, entity2: entity2},
         function(data) {
             if (data.error == null) {
-                event.html(drawEventInnerHtmlWithButtons(data.result));
+                event.html(drawEventInnerHtmlWithButtons(data.result, type));
             } else {
                 alert(data.error)
             }
@@ -129,8 +151,8 @@ function saveEvent(id) {
 }
 
 function hideRow(id) {
-    $('tr#' + id + '.even').toggle();
     var row = $('tbody#' + id);
+
     row.off("mouseleave").mouseleave(function() {});
     row.off("mouseenter").mouseenter(function() {
         mouseOver(id);
@@ -144,7 +166,6 @@ function expandRow(id) {
     row.off("mouseleave").mouseleave(function() {
         hideRow(id);
     });
-    $('tr#' + id + '.even').toggle();
 }
 
 function mouseOver(id) {
@@ -156,6 +177,13 @@ function mouseOver(id) {
 
     row.off("mouseleave").mouseleave(function() {
         clearTimeout(timeout);
+    });
+}
+
+function updateBlock(id, new_id) {
+    $.post($SCRIPT_ROOT + '/_get_group', {id: new_id}, function(data) {
+        var events = data.result;
+        $('tbody#' + id).replaceWith(drawEventWithButtons(events));
     });
 }
 

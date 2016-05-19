@@ -40,13 +40,23 @@ class EventsForm(Form):
     date = TextAreaField()
     sentence = TextAreaField()
 
-
 class FetchArticleForm(Form):
     fetch_articles = SubmitField('Fetch new articles')
 
 @app.route('/')
 def redirect_to_events():
     return redirect(url_for('events'))
+
+def get_events_group(id):
+    id = db_handler.get_event_set_for_event_by_id(id)
+    events_ids = db_handler.get_events_set_by_id(id)
+
+    events = [get_extended_event(id)]
+    for event_id in events_ids:
+        if event_id != id:
+            events.append(get_extended_event(event_id))
+
+    return events
 
 def get_extended_event(id):
     event = db_handler.get_event_by_id(id)
@@ -82,7 +92,7 @@ def load_events():
     events = db_handler.get_events_starting_from(event_cnt + DEFAULT_ARTICLES_COUNT, datetime.datetime.now(),
                                                  pattern, site)
 
-    return jsonify(result=[get_extended_event(e.id).json() for e in
+    return jsonify(result=[[x.json() for x in get_events_group(e.id)] for e in
                            events[event_cnt: event_cnt + DEFAULT_ARTICLES_COUNT]])
 
 
@@ -113,12 +123,17 @@ def get_event_by_id():
     id = request.form.get('id', 0, type=int)
     return jsonify(result=get_extended_event(id).json())
 
+@app.route('/_get_group', methods=['POST'])
+def get_group_by_id():
+    id = request.form.get('id', 0, type=int)
+    return jsonify(result=[x.json() for x in get_events_group(id)])
+
 @app.route('/_join_events_merge', methods=['POST'])
 def join_events_merge():
     id = request.form.get('id', 0, type=int)
-    join_entities1 = request.form.get('joinEntities1', 0, type=bool)
-    join_actions = request.form.get('joinActions', 0, type=bool)
-    join_entities2 = request.form.get('joinEntities2', 0, type=bool)
+    join_entities1 = request.form.get('joinEntities1', "", type=str) == 'true'
+    join_actions = request.form.get('joinActions', "", type=str) == 'true'
+    join_entities2 = request.form.get('joinEntities2', "", type=str) == 'true'
 
     ids = db_handler.get_event_merge_by_id(id)
     db_handler.join_events(ids)
@@ -139,9 +154,9 @@ def join_events_merge():
 @app.route('/_join_events', methods=['POST'])
 def join_events():
     ids = request.form.getlist('ids[]')
-    join_entities1 = request.form.get('joinEntities1', 0, type=bool)
-    join_actions = request.form.get('joinActions', 0, type=bool)
-    join_entities2 = request.form.get('joinEntities2', 0, type=bool)
+    join_entities1 = request.form.get('joinEntities1', "", type=str) == 'true'
+    join_actions = request.form.get('joinActions', "", type=str) == 'true'
+    join_entities2 = request.form.get('joinEntities2', "", type=str) == 'true'
 
     db_handler.join_events(ids)
 
@@ -265,7 +280,6 @@ def events():
 
 @app.route('/sources', methods = ['GET', 'POST'])
 def articles():
-    print(request.method)
     articles = db_handler.get_sites()
     articles_forms = [FetchArticleForm(prefix=article[0]) for article in articles]
     for form, article in zip(articles_forms, articles):
