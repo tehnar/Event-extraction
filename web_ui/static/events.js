@@ -196,7 +196,7 @@ $(window).bind('scroll', _.throttle(function() {
     if($(this).scrollTop() + window.innerHeight + 50 >= $("#events").innerHeight()) {
         loadEvents();
     }
-}, 100));
+}, 200));
 
 $(document).ready(function () {
 	$('a.btn-ok, #dialog-ok').click(function () {
