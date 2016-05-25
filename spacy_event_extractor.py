@@ -152,7 +152,8 @@ class SpacyEventExtractor:
                     len(set(word.strip().lower() for word in entity2_string.split()) & keywords_set) == 0:
                 continue  # there is no keywords in token and subj_string
 
-            if SpacyEventExtractor._have_pronouns(entity1_string) or SpacyEventExtractor._have_pronouns(entity2_string):
+            if SpacyEventExtractor._have_pronouns(entity1_string) or \
+                    SpacyEventExtractor._have_pronouns(entity2_string):
                 continue
 
             if SpacyEventExtractor._is_present_simple(verb) or SpacyEventExtractor._is_present_continuous(verb):

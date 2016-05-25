@@ -22,7 +22,7 @@ class DatabaseHandler:
         try:
             self.cursor.execute("SELECT version FROM settings")
             version = self.cursor.fetchone()
-        except:  #just an old version of db without settings table
+        except:  # just an old version of db without settings table
             self.connection.rollback()
         if version is not None:
             version = version[0]
@@ -33,7 +33,6 @@ class DatabaseHandler:
     def clear_db(self):
         for table_name in ['articles', 'entities', 'actions', 'events', 'event_sources', 'settings', 'dates',
                            'entities_sets', 'actions_sets', 'events_merge', 'events_sets']:
-
             self.cursor.execute("DROP TABLE IF EXISTS {0} CASCADE".format(table_name))
             self.connection.commit()
 
@@ -101,7 +100,7 @@ class DatabaseHandler:
 
         self.cursor.execute("""SELECT id FROM events WHERE entity1=(%s) AND entity2=(%s) AND action=(%s)
                             AND sentence=(%s) AND date=(%s)""",
-                                       (entity1_id, entity2_id, action_id, sentence, date))
+                            (entity1_id, entity2_id, action_id, sentence, date))
         event_id = self.cursor.fetchone()
         if event_id is None:
             self.cursor.execute("INSERT INTO events (entity1, entity2, action, sentence, date) "
@@ -117,7 +116,7 @@ class DatabaseHandler:
         return event_id
 
     def del_event_by_id(self, event_id: int) -> int:
-        #update sets
+        # update sets
         self.del_event_from_set(event_id)
 
         self.cursor.execute("""DELETE FROM event_sources WHERE event_id=(%s)""", (event_id,))
@@ -202,7 +201,7 @@ class DatabaseHandler:
         WHERE id=%s""", (id1, id2, action_id, new_event.sentence, date_id, event_id))
         self.connection.commit()
 
-    #TODO: check 'del_action' and 'del_entity' (add set update)
+    # TODO: check 'del_action' and 'del_entity' (add set update)
 
     def get_set_by_id(self, table: str, id: int) -> int:
         self.cursor.execute("SELECT parent_id FROM " + table + " WHERE child_id=%s", (id,))
@@ -247,7 +246,8 @@ class DatabaseHandler:
                 event1_id, event2_id = event2_id, event1_id
 
         if event1_id != event2_id:
-            self.cursor.execute("INSERT INTO " + table + " (child_id, parent_id) VALUES (%s, %s) ", (event1_id, event2_id))
+            self.cursor.execute("INSERT INTO " + table + " (child_id, parent_id) VALUES (%s, %s) ",
+                                (event1_id, event2_id))
             self.cursor.execute("UPDATE " + table + " SET parent_id=%s WHERE parent_id=%s", (event2_id, event1_id))
             self.connection.commit()
 
@@ -255,7 +255,7 @@ class DatabaseHandler:
         self.cursor.execute("SELECT child_id FROM " + table + " WHERE parent_id=%s", (event_id,))
         result = self.cursor.fetchall()
         if len(result) > 0:
-            self.cursor.execute("DELETE FROM  " + table +  " WHERE parent_id=%s", (event_id,))
+            self.cursor.execute("DELETE FROM  " + table + " WHERE parent_id=%s", (event_id,))
             self.connection.commit()
 
             if table == "entities_sets":
@@ -276,7 +276,7 @@ class DatabaseHandler:
     def join_events(self, ids: [int]) -> int:
         self.join("events_sets", ids[0], ids)
 
-    def del_event_from_set(self, event_id : int):
+    def del_event_from_set(self, event_id: int):
         self.del_from_set("events_sets", event_id)
 
     def get_entity_set_by_entity_id(self, entity_id: int) -> int:
@@ -313,8 +313,9 @@ class DatabaseHandler:
     def del_action_from_set(self, event_id: int):
         self.del_from_set("actions_sets", event_id)
 
-    #TODO: fix it
-    def process_string(self, text: str) -> str:
+    # TODO: fix it
+    @staticmethod
+    def process_string(text: str) -> str:
         text = ' '.join(text.split())
         text = text.replace(" ’s", "’s")
         text = text.replace("'ll", "will")
@@ -334,7 +335,7 @@ class DatabaseHandler:
         event_data = self.cursor.fetchone()
         return event_data[0], event_data[1], event_data[2]
 
-    def get_event_ids_from(self, from_id: int =0) -> [int]:
+    def get_event_ids_from(self, from_id: int = 0) -> [int]:
         self.cursor.execute("SELECT id FROM events WHERE id>=%s ORDER BY id", (from_id,))
         ids = []
 
@@ -343,7 +344,7 @@ class DatabaseHandler:
                 ids.append(id[0])
         return ids
 
-    def get_event_ids_to(self, to_id: int =0) -> [int]:
+    def get_event_ids_to(self, to_id: int = 0) -> [int]:
         self.cursor.execute("SELECT id FROM events WHERE id<=%s ORDER BY id", (to_id,))
         ids = []
         if self.cursor.rowcount > 1:
@@ -367,7 +368,7 @@ class DatabaseHandler:
     def get_event_merge_by_id(self, id: int) -> (int, int):
         self.cursor.execute("SELECT event1_id, event2_id FROM events_merge WHERE id=%s", (id,))
         data = self.cursor.fetchone()
-        return (data[0], data[1])
+        return data[0], data[1]
 
     def del_event_merge_by_id(self, id: int):
         self.cursor.execute("DELETE FROM events_merge WHERE id=%s", (id,))
@@ -375,7 +376,8 @@ class DatabaseHandler:
 
     def get_articles(self) -> [Article]:
         self.cursor.execute("SELECT * FROM articles")
-        return list(map(lambda t: Article(t[2], t[8], t[6], t[1], "blog.jetbrains.com", t[5], t[7], t[3]), self.cursor.fetchall()))
+        return list(map(lambda t: Article(t[2], t[8], t[6], t[1], "blog.jetbrains.com", t[5], t[7], t[3]),
+                        self.cursor.fetchall()))
 
     def get_main_entity_core_by_event_id(self, id: int) -> (int, int, int):
         entity1, action, entity2 = self.get_entity_core_id_by_event_id(id)

@@ -7,6 +7,7 @@ from bs4 import BeautifulSoup
 from data_mining.article import Article
 from .article_downloader import ArticleDownloader
 
+
 class SlashdotDownloader(ArticleDownloader):
     SITE_ADDRESS = 'http://slashdot.org/'
     ARTICLES_PER_PAGE = 15
@@ -30,7 +31,8 @@ class SlashdotDownloader(ArticleDownloader):
                 date = article_soup.find('time').get('datetime')
 
                 text = ' '.join(article_soup.find('div', {'class': 'p'}).strings)
-                author_name = article_soup.find('span', {'class': 'story-byline'}).get_text().replace('Posted', '').replace('by', '').split()[0]
+                author_name = article_soup.find('span', {'class': 'story-byline'}).\
+                    get_text().replace('Posted', '').replace('by', '').split()[0]
 
                 yield Article(header=header, summary=summary, text=text,
                               url=urljoin(SlashdotDownloader.SITE_ADDRESS, link),

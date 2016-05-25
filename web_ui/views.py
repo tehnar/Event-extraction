@@ -1,14 +1,15 @@
-from urllib.parse import urlparse
-from flask import session, redirect, url_for, render_template, request, jsonify
-from web_ui import app
-from flask.ext.wtf import Form
-from wtforms import SubmitField, TextAreaField
-from db import DatabaseHandler
-from event import Event
 import datetime
+import threading
+
 import editdistance
 import numpy
-import threading
+from flask import redirect, url_for, render_template, request, jsonify
+from flask.ext.wtf import Form
+from wtforms import SubmitField, TextAreaField
+
+from db import DatabaseHandler
+from event import Event
+from web_ui import app
 
 
 class Settings:
@@ -31,6 +32,7 @@ db_handler = DatabaseHandler()
 settings = Settings()
 MERGE_PROGRESS = 0
 
+
 class EventsForm(Form):
     selected_event_id = -1
     publish_date = TextAreaField()
@@ -40,12 +42,15 @@ class EventsForm(Form):
     date = TextAreaField()
     sentence = TextAreaField()
 
+
 class FetchArticleForm(Form):
     fetch_articles = SubmitField('Fetch new articles')
+
 
 @app.route('/')
 def redirect_to_events():
     return redirect(url_for('events'))
+
 
 def get_events_group(id):
     id = db_handler.get_event_set_for_event_by_id(id)
@@ -58,6 +63,7 @@ def get_events_group(id):
 
     return events
 
+
 def get_extended_event(id):
     event = db_handler.get_event_by_id(id)
     event.pdate = db_handler.get_event_publish_date(id)
@@ -65,9 +71,11 @@ def get_extended_event(id):
     event.main_entity1, event.main_action, event.main_entity2 = db_handler.get_main_entity_core_by_event_id(id)
     return event
 
+
 @app.route('/_get_events_merge_count', methods=['POST'])
 def get_events_merge_count():
     return jsonify(result=len(db_handler.get_events_merge()))
+
 
 @app.route('/_load_events_merge', methods=['POST'])
 def load_events_merge():
@@ -102,11 +110,13 @@ def delete_events_merge():
     db_handler.del_event_merge_by_id(id)
     return jsonify(result=None)
 
+
 @app.route('/_delete_event', methods=['POST'])
 def delete_event_by_id():
     id = request.form.get('id', 0, type=int)
     db_handler.del_event_by_id(id)
     return jsonify(result=None)
+
 
 @app.route('/_auto_merge', methods=['POST'])
 def run_auto_merge():
@@ -114,19 +124,23 @@ def run_auto_merge():
     t1.start()
     return jsonify(result=None)
 
+
 @app.route('/_get_merge_progress', methods=['POST'])
 def get_merge_progress():
     return jsonify(result=MERGE_PROGRESS)
+
 
 @app.route('/_get_event', methods=['POST'])
 def get_event_by_id():
     id = request.form.get('id', 0, type=int)
     return jsonify(result=get_extended_event(id).json())
 
+
 @app.route('/_get_group', methods=['POST'])
 def get_group_by_id():
     id = request.form.get('id', 0, type=int)
     return jsonify(result=[x.json() for x in get_events_group(id)])
+
 
 @app.route('/_join_events_merge', methods=['POST'])
 def join_events_merge():
@@ -151,6 +165,7 @@ def join_events_merge():
 
     return jsonify()
 
+
 @app.route('/_join_events', methods=['POST'])
 def join_events():
     ids = request.form.getlist('ids[]')
@@ -174,12 +189,14 @@ def join_events():
 
 def check_phrase(phrase, sentence):
     for word in phrase.split():
-        if not word in sentence:
+        if word not in sentence:
             return False
     return True
 
+
 def are_same_sentences(text1, text2):
     return 100 * editdistance.eval(text1, text2) / numpy.average([len(text1), len(text2)])
+
 
 def are_same(id1, id2):
     entity11_id, action1_id, entity12_id = db_handler.get_entity_core_id_by_event_id(id1)
@@ -203,10 +220,13 @@ def are_same(id1, id2):
         return False
 
     print("Same events: " + str(id1) + " " + str(id2) + "(" + str(text_delta) + ")")
-    print(db_handler.get_entity_by_id(entity11_id), db_handler.get_action_by_id(action1_id), db_handler.get_entity_by_id(entity12_id))
-    print(db_handler.get_entity_by_id(entity21_id), db_handler.get_action_by_id(action2_id), db_handler.get_entity_by_id(entity22_id))
+    print(db_handler.get_entity_by_id(entity11_id), db_handler.get_action_by_id(action1_id),
+          db_handler.get_entity_by_id(entity12_id))
+    print(db_handler.get_entity_by_id(entity21_id), db_handler.get_action_by_id(action2_id),
+          db_handler.get_entity_by_id(entity22_id))
 
     return True
+
 
 def auto_merge():
     global MERGE_PROGRESS
@@ -272,13 +292,13 @@ def modify_event_by_id():
     return jsonify(result=get_extended_event(event_id).json(), error=None)
 
 
-@app.route('/events', methods = ['GET', 'POST'])
+@app.route('/events', methods=['GET', 'POST'])
 def events():
     form = EventsForm()
     return render_template("events.html", form=form)
 
 
-@app.route('/sources', methods = ['GET', 'POST'])
+@app.route('/sources', methods=['GET', 'POST'])
 def articles():
     articles = db_handler.get_sites()
     articles_forms = [FetchArticleForm(prefix=article[0]) for article in articles]

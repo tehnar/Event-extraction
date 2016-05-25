@@ -5,6 +5,7 @@ import re
 import configparser
 from .article_downloader import ArticleDownloader
 
+
 class TwitterDownloader(ArticleDownloader):
     _CONFIG_NAME = 'config.cfg'
 

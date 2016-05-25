@@ -7,6 +7,7 @@ from dateutil import parser as date_parser
 from data_mining.article import Article
 from .article_downloader import ArticleDownloader
 
+
 class InfoworldDownloader(ArticleDownloader):
     SITE_ADDRESS = 'http://www.infoworld.com'
     ARTICLES_PER_PAGE = 200
@@ -38,7 +39,8 @@ class InfoworldDownloader(ArticleDownloader):
 
                 while True:
                     InfoworldDownloader.extract_tag(soup.find('aside'))  # probably we don't need comments for an images
-                    InfoworldDownloader.extract_tag(soup.find('figure', {'class': 'fakesidebar'}))  # get rid of text ads
+                    InfoworldDownloader.extract_tag(soup.find('figure', {'class': 'fakesidebar'}))
+                    # get rid of text ads
 
                     text += ' '.join(soup.find('div', itemprop='articleBody').strings)
                     next_page_link = soup.find('a', {'class': 'page-link next'})
