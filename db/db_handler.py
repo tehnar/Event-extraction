@@ -3,15 +3,18 @@ import psycopg2
 from data_mining.article import Article
 from event import Event
 from datetime import datetime
-
+import os
+import logging
 
 class DatabaseHandler:
     _CONFIG_NAME = 'config.cfg'
     _VERSION = 2
 
     def __init__(self):
+        root_dir = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
+        config_filename = os.path.join(root_dir, DatabaseHandler._CONFIG_NAME)
         config = configparser.ConfigParser()
-        config.read(DatabaseHandler._CONFIG_NAME)
+        config.read(config_filename)
         login = config['db']['login']
         password = config['db']['password']
         host = config['db']['host']

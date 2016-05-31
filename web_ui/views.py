@@ -3,6 +3,8 @@ import threading
 
 import editdistance
 import numpy
+import os.path
+
 from flask import redirect, url_for, render_template, request, jsonify
 from flask.ext.wtf import Form
 from wtforms import SubmitField, TextAreaField
@@ -13,7 +15,8 @@ from web_ui import app
 
 
 class Settings:
-    FILE_NAME = "settings.txt"
+    root_dir = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
+    FILE_NAME = os.path.join(root_dir, "settings.txt")
 
     def get_last_processed_event_id(self):
         f = open(self.FILE_NAME, "r")
