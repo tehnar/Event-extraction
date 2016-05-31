@@ -12,10 +12,10 @@ function drawEventWithButtons(events) {
     return html;
 }
 
-document.getElementById("query").value = localStorage.getItem("query");
+document.getElementById("query").value = sessionStorage.getItem("query");
 
 function saveSearchString() {
-    localStorage.setItem("query", $("#query").val());
+    sessionStorage.setItem("query", $("#query").val());
     return true;
 }
 
