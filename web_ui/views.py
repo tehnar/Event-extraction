@@ -186,7 +186,7 @@ def are_same_sentences(text1, text2):
     return 100 * editdistance.eval(text1, text2) / numpy.average([len(text1), len(text2)])
 
 
-def are_same(id1, id2):
+def are_same(id1, id2, db_handler):
     entity11_id, action1_id, entity12_id = db_handler.get_entity_core_id_by_event_id(id1)
     entity21_id, action2_id, entity22_id = db_handler.get_entity_core_id_by_event_id(id2)
 
@@ -219,12 +219,12 @@ def are_same(id1, id2):
 def auto_merge():
     global MERGE_PROGRESS
     global settings
-    global db_handler
+    db_new_handler = DatabaseHandler()
 
     last_id = settings.get_last_processed_event_id()
 
-    old_ids = db_handler.get_event_ids_to(last_id)
-    new_ids = db_handler.get_event_ids_from(last_id + 1)
+    old_ids = db_new_handler.get_event_ids_to(last_id)
+    new_ids = db_new_handler.get_event_ids_from(last_id + 1)
 
     old_count = len(old_ids)
     new_count = len(new_ids)
@@ -235,15 +235,15 @@ def auto_merge():
 
     for i1 in range(0, new_count):
         for i2 in range(0, old_count):
-            if are_same(new_ids[i1], old_ids[i2]):
-                db_handler.add_events_to_events_merge(new_ids[i1], old_ids[i2])
+            if are_same(new_ids[i1], old_ids[i2], db_new_handler):
+                db_new_handler.add_events_to_events_merge(new_ids[i1], old_ids[i2])
 
             count += 1
             MERGE_PROGRESS = 100 * count / total_count
 
         for i2 in range(i1 + 1, new_count):
-            if are_same(new_ids[i1], new_ids[i2]):
-                db_handler.add_events_to_events_merge(new_ids[i1], new_ids[i2])
+            if are_same(new_ids[i1], new_ids[i2], db_new_handler):
+                db_new_handler.add_events_to_events_merge(new_ids[i1], new_ids[i2])
 
             count += 1
             MERGE_PROGRESS = 100 * count / total_count
