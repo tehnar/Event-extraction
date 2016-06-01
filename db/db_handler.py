@@ -127,6 +127,7 @@ class DatabaseHandler:
         self.del_event_from_set(event_id)
 
         self.cursor.execute("""DELETE FROM event_sources WHERE event_id=(%s)""", (event_id,))
+        self.cursor.execute("""DELETE FROM events_merge WHERE event1_id=(%s) OR event2_id=(%s)""", (event_id,event_id))
         self.cursor.execute("""DELETE FROM events WHERE id=(%s)""", (event_id,))
 
         self.connection.commit()
