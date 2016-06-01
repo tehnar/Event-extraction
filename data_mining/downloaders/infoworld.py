@@ -9,6 +9,7 @@ from .article_downloader import ArticleDownloader
 
 
 class InfoworldDownloader(ArticleDownloader):
+    site_name = ['infoworld.com']
     SITE_ADDRESS = 'http://www.infoworld.com'
     ARTICLES_PER_PAGE = 200
 

@@ -9,6 +9,7 @@ from .article_downloader import ArticleDownloader
 
 
 class SlashdotDownloader(ArticleDownloader):
+    site_names = ['slashdot.org']
     SITE_ADDRESS = 'http://slashdot.org/'
     ARTICLES_PER_PAGE = 15
 

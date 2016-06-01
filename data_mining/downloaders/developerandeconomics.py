@@ -9,6 +9,7 @@ from .article_downloader import ArticleDownloader
 
 
 class DevAndEconomicsDownloader(ArticleDownloader):
+    site_names = ['developereconomics.com']
     SITE_ADDRESS = 'http://www.developereconomics.com'
 
     ARTICLES_PER_PAGE = 200

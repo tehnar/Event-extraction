@@ -8,6 +8,7 @@ from data_mining.article import Article
 from .article_downloader import ArticleDownloader
 
 class ItNewsDownloader(ArticleDownloader):
+    site_names = ['itnews.com']
     SITE_ADDRESS = 'http://www.itnews.com/'
     ARTICLES_PER_PAGE = 200
 

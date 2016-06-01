@@ -8,9 +8,6 @@
   $SCRIPT_ROOT = {{ request.script_root|tojson|safe }};
 </script>
 
-<script src="{{ url_for('static', filename='drawing.js') }}"></script>
-<script src="{{ url_for('static', filename='merge.js') }}"></script>
-
 
 {% extends "base.html" %}
 {% block content %}
@@ -38,5 +35,8 @@
             <td class="th"> Actions </td>
         </tr>
     </table>
+
+<script src="{{ url_for('static', filename='drawing.js') }}"></script>
+<script src="{{ url_for('static', filename='merge.js') }}"></script>
 
 {% endblock %}

@@ -10,6 +10,13 @@ class ArticleDownloaderMeta(type):
 
 
 class ArticleDownloader(metaclass=ArticleDownloaderMeta):
+    site_names = []  # to be overwritten in subclasses
+
     @staticmethod
     def get_articles():
         raise NotImplementedError
+
+    # some downloaders may support more that one site
+    @classmethod
+    def get_articles_by_site_name(cls, site_name: str):
+        return cls.get_articles()

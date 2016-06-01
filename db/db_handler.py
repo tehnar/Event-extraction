@@ -1,10 +1,14 @@
 import configparser
+import os
+import re
+from datetime import datetime
+
 import psycopg2
+
 from data_mining.article import Article
 from event import Event
-from datetime import datetime
-import os
-import logging
+from data_mining.downloaders import article_downloaders
+
 
 class DatabaseHandler:
     _CONFIG_NAME = 'config.cfg'
@@ -130,7 +134,8 @@ class DatabaseHandler:
 
     def get_events_starting_from(self, count: int, start_date: str or datetime,
                                  pattern: str, site_name: str) -> [Event]:
-        pattern = '%' + '%'.join(pattern.split('+')) + '%'
+        tokens = [p[0] if p[0] else p[1] for p in re.findall(r'"([^ ][^"]+[^ ])"|([^ "]+)', pattern.replace('+', ' '))]
+        pattern = '%' + '%'.join(tokens) + '%'
         self.cursor.execute("""SELECT event.id, entity1.entity_name, entity2.entity_name, action.action_name,
         event.sentence, date.date
         FROM events event
@@ -154,10 +159,15 @@ class DatabaseHandler:
                                 id=raw_event[0]))
         return events
 
-    def get_sites(self) -> [str]:
-        self.cursor.execute("""SELECT article.site_name, MAX(article.publish_date) FROM articles article
-        WHERE article.publish_date IS NOT NULL GROUP BY article.site_name""")
-        return self.cursor.fetchall()
+    def get_sites(self) -> [(str, datetime, datetime)]:
+        articles = []
+        for downloader in article_downloaders:
+            for site_name in downloader.site_names:
+                self.cursor.execute("""SELECT MAX(article.publish_date) FROM articles article
+                WHERE article.publish_date IS NOT NULL AND article.site_name = %s""", (site_name,))
+
+                articles.append((site_name, self.cursor.fetchone()[0]))
+        return articles
 
     def get_event_by_id(self, event_id: int) -> Event:
         self.cursor.execute("""SELECT event.id, entity1.entity_name, entity2.entity_name, action.action_name,

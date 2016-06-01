@@ -2,10 +2,15 @@
 
 import sys
 import logging.config
+import logging
 
 from daemon.daemon3x import daemon
 
 LOG_PATH = "tmp/web.log"
+
+
+def log_exception(type, value, tb):
+    logging.exception("Uncaught exception: {0}".format(str(value)))
 
 
 class ExampleServerDaemon(daemon):
@@ -37,10 +42,11 @@ class ExampleServerDaemon(daemon):
             })
             logger = logging.getLogger(__name__)
             logger.info("Logging initialized. Creating application...")
+            sys.excepthook = log_exception
             from web_ui import app
             app.run(host='0.0.0.0')
         except Exception as e:
-            with open('error_file.txt', 'w') as f:
+            with open('/tmp/error_file.txt', 'w') as f:
                 import traceback
                 f.write(traceback.format_exc())
                 f.write('\n')

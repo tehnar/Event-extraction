@@ -7,6 +7,7 @@ from .article_downloader import ArticleDownloader
 
 
 class TwitterDownloader(ArticleDownloader):
+    site_name = ['twitter.com']  # todo: "correct" site_name in articles
     _CONFIG_NAME = 'config.cfg'
 
     @staticmethod

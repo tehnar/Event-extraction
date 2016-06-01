@@ -8,30 +8,36 @@
   $SCRIPT_ROOT = {{ request.script_root|tojson|safe }};
 </script>
 
-<script src="{{ url_for('static', filename='drawing.js') }}"></script>
-<script src="{{ url_for('static', filename='sources.js') }}"></script>
 
 {% extends "base.html" %}
 {% block content %}
+
 </html>
-    <table class="sources">
+    <table class="table">
         <thead> 
             <tr>
-                <th> Site </th>
-                <th> Last article date </th>
+                <td class="th"> Site </td>
+                <td class="th"> Latest downloaded article date </td>
+                <td class="th"> Actions </td>
+                <td class="th"> Status </td>
             </tr>
         </thead>
-        {% for article, form in articles %}
-        <tr> 
+        {% for article in articles %}
+        <tr name={{article[0]}}>
             <td> {{article[0]}} </td>
             <td> {{article[1]}} </td>
             <td>
                 <form action="" method="post">
-                    {{form.hidden_tag()}}
-                    {{form.fetch_articles(class="btn btn-primary")}}
+                    <button name="fetch" class="modify" onclick='fetchArticles("{{article[0]}}")')>Fetch new articles</button>
                 </form>
             </td>
+            <td class="fetch_status" id={{article[0]}}> No articles are being downloaded now </td>
         </tr>
         {% endfor %}
     </table>
+
+<script src="{{ url_for('static', filename='drawing.js') }}"></script>
+<script src="{{ url_for('static', filename='sources.js') }}"></script>
+
 {% endblock %}
+

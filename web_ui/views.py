@@ -6,8 +6,8 @@ import numpy
 import os.path
 
 from flask import redirect, url_for, render_template, request, jsonify
-from flask.ext.wtf import Form
-from wtforms import SubmitField, TextAreaField
+from threading import Thread
+from data_mining.downloaders import article_downloaders
 
 from db import DatabaseHandler
 from event import Event
@@ -34,21 +34,6 @@ DEFAULT_ARTICLES_COUNT = 10
 db_handler = DatabaseHandler()
 settings = Settings()
 MERGE_PROGRESS = 0
-
-
-class EventsForm(Form):
-    selected_event_id = -1
-    publish_date = TextAreaField()
-    entity1 = TextAreaField()
-    action = TextAreaField()
-    entity2 = TextAreaField()
-    date = TextAreaField()
-    sentence = TextAreaField()
-
-
-class FetchArticleForm(Form):
-    fetch_articles = SubmitField('Fetch new articles')
-
 
 @app.route('/')
 def redirect_to_events():
@@ -297,25 +282,52 @@ def modify_event_by_id():
 
 @app.route('/events', methods=['GET', 'POST'])
 def events():
-    form = EventsForm()
-    return render_template("events.html", form=form)
+    return render_template("events.html")
 
 
 @app.route('/sources', methods=['GET', 'POST'])
 def articles():
     articles = db_handler.get_sites()
-    articles_forms = [FetchArticleForm(prefix=article[0]) for article in articles]
-    for form, article in zip(articles_forms, articles):
-        pass  # Todo: actually fetch articles from given source
 
-    return render_template("sources.html", articles=zip(articles, articles_forms))
+    return render_template("sources.html", articles=articles)
 
 
 @app.route('/merge', methods=['GET', 'POST'])
 def statistics():
-    return render_template("merge.html", form=Form())
+    return render_template("merge.html")
 
 
 @app.route('/_search_events', methods=['GET'])
 def search_events():
     return redirect(url_for('events', query=request.args['query']))
+
+
+
+fetch_progress = {}
+
+
+@app.route('/_fetch_articles', methods=['POST'])
+def fetch_articles():
+
+    site_name = request.form.get('site_name', '', type=str)
+    last_date = [t[1] for t in db_handler.get_sites() if t[0] == site_name][0]
+
+    def fetch():
+        db = DatabaseHandler()
+        for downloader in article_downloaders:
+            if site_name in downloader.site_names:
+                for article in downloader.get_articles_by_site_name(site_name):
+                    if article.publish_date >= last_date:
+                        db.add_article_or_get_id(article)
+                        fetch_progress[site_name] = article.publish_date
+                    else:
+                        break
+        fetch_progress.pop(site_name)
+    fetch_thread = Thread(target=fetch)
+    fetch_thread.start()
+    return jsonify(result=None, error=None)
+
+
+@app.route('/_get_fetch_info', methods=['POST'])
+def get_fetch_info():
+    return jsonify(result=fetch_progress, error=None)
